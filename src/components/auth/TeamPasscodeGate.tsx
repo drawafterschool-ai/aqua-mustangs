@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { Lock, CheckCircle2, ArrowRight, Crown, ShieldCheck } from 'lucide-react';
 import { type User } from '../../types';
 
+import { AquaMustangsLogo } from '../common/AquaMustangsLogo';
+
 export const TeamPasscodeGate: React.FC = () => {
   const { verifyTeamPasscode, users, loginUser } = useApp();
   const [passcode, setPasscode] = useState('');
@@ -37,8 +39,8 @@ export const TeamPasscodeGate: React.FC = () => {
 
         {/* Logo & School Header */}
         <div className="text-center space-y-2 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 via-[#0A3E2F] to-[#041a13] mx-auto flex items-center justify-center shadow-xl border-2 border-amber-400 text-amber-300 font-extrabold text-xl font-mono">
-            AM
+          <div className="mx-auto flex justify-center mb-1">
+            <AquaMustangsLogo size="xl" />
           </div>
 
           <h1 className="text-3xl font-black text-white tracking-tight pt-2">

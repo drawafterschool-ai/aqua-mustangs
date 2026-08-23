@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { type User } from '../../types';
 
+import { AquaMustangsLogo } from '../common/AquaMustangsLogo';
+
 interface AppHeaderProps {
   onOpenPwaGuide?: () => void;
 }
@@ -40,14 +42,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenPwaGuide }) => {
     <header className="sticky top-0 z-40 bg-[#06241b]/95 backdrop-blur-md border-b border-emerald-800/30 text-white shadow-lg pt-safe">
       <div className="max-w-4xl mx-auto px-3.5 py-2.5 flex items-center justify-between">
         
-        {/* Brand & Logo */}
+        {/* Brand & Minimal Logo */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 via-[#0a3e2f] to-[#041a13] p-0.5 shadow-md border border-amber-400/40 flex items-center justify-center">
-            <span className="text-amber-400 font-extrabold text-sm tracking-tight font-mono">AM</span>
-            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full flex items-center justify-center text-[8px] text-slate-950 font-bold">
-              🏊
-            </div>
-          </div>
+          <AquaMustangsLogo size="md" />
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
