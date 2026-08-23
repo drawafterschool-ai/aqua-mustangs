@@ -23,9 +23,16 @@ import { isUserAllowedToViewEvent } from '../utils/eventPermissions';
 interface HomeViewProps {
   onNavigateTab: (tab: TabType) => void;
   onOpenAttendance?: (eventId: string) => void;
+  onOpenNotifications?: () => void;
+  unreadNotifCount?: number;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ onNavigateTab, onOpenAttendance }) => {
+export const HomeView: React.FC<HomeViewProps> = ({ 
+  onNavigateTab, 
+  onOpenAttendance,
+  onOpenNotifications,
+  unreadNotifCount = 0 
+}) => {
   const { 
     currentUser, 
     events, 
@@ -104,8 +111,26 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigateTab, onOpenAttenda
               </span>
             </div>
 
-            <div className="text-[11px] text-slate-300 font-mono">
-              2026-2027 Season
+            {/* Notification Bell Button on Home */}
+            <div className="flex items-center gap-2">
+              {onOpenNotifications && (
+                <button
+                  onClick={onOpenNotifications}
+                  className="p-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/60 text-amber-300 transition flex items-center gap-1.5 text-xs font-bold px-2.5 shadow-sm"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Alerts</span>
+                  {unreadNotifCount > 0 && (
+                    <span className="w-4 h-4 bg-amber-400 text-slate-950 text-[9px] font-black rounded-full flex items-center justify-center">
+                      {unreadNotifCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              <div className="text-[11px] text-slate-300 font-mono hidden xs:block">
+                2026-2027 Season
+              </div>
             </div>
           </div>
 
@@ -144,10 +169,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigateTab, onOpenAttenda
               onClick={() => onNavigateTab('chat')}
               className="cursor-pointer bg-emerald-950/60 hover:bg-emerald-900/80 p-2.5 rounded-2xl border border-emerald-800/50 transition text-center"
             >
-              <div className="text-base sm:text-lg font-extrabold text-cyan-400 font-mono">
-                6
+              <div className="text-base sm:text-lg font-extrabold text-amber-300 font-mono flex items-center justify-center gap-1">
+                <MessageSquare className="w-4 h-4" />
               </div>
-              <div className="text-[10px] text-slate-300 font-semibold mt-0.5">Group Chats</div>
+              <div className="text-[10px] text-slate-300 font-semibold mt-0.5">Team Chat</div>
             </div>
           </div>
         </div>

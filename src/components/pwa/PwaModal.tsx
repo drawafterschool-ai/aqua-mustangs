@@ -91,6 +91,16 @@ export const PwaModal: React.FC<PwaModalProps> = ({ isOpen, onClose }) => {
                 <p className="text-slate-400 text-[11px]">Scroll down in the share sheet and tap Add.</p>
               </div>
             </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-950/60 border border-emerald-600/50">
+              <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 font-bold flex items-center justify-center flex-shrink-0 text-xs">
+                4
+              </div>
+              <div>
+                <p className="font-bold text-amber-300">Open App &amp; Allow Notifications 🔔</p>
+                <p className="text-emerald-200/90 text-[11px]">Open the newly installed app on your home screen and tap "Allow" for meet and schedule alerts.</p>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-3.5 text-xs text-slate-300">
@@ -127,12 +137,22 @@ export const PwaModal: React.FC<PwaModalProps> = ({ isOpen, onClose }) => {
                 <p className="text-slate-400 text-[11px]">The Aqua Mustangs icon will be added to your home screen.</p>
               </div>
             </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-950/60 border border-emerald-600/50">
+              <div className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 font-bold flex items-center justify-center flex-shrink-0 text-xs">
+                4
+              </div>
+              <div>
+                <p className="font-bold text-amber-300">Allow Notifications 🔔</p>
+                <p className="text-emerald-200/90 text-[11px]">Tap "Allow" on the notification prompt for instant meet reminders and chat alerts.</p>
+              </div>
+            </div>
           </div>
         )}
 
         <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-emerald-400">
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4 text-amber-400" /> Offline enabled
+            <CheckCircle2 className="w-4 h-4 text-amber-400" /> Push &amp; Offline enabled
           </span>
           <button
             onClick={onClose}

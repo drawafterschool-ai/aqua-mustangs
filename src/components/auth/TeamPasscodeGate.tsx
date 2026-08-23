@@ -151,13 +151,29 @@ export const TeamPasscodeGate: React.FC = () => {
           </div>
         )}
 
+        {/* Mobile Notification & PWA Instructions Banner */}
+        <div className="p-3 bg-emerald-950/50 rounded-2xl border border-emerald-700/40 text-[11px] text-emerald-200/90 space-y-1.5 relative z-10">
+          <div className="flex items-center gap-1.5 text-amber-300 font-bold text-xs">
+            <span>🔔</span>
+            <span>Mobile Notifications &amp; Installation:</span>
+          </div>
+          <div className="grid grid-cols-1 gap-1 text-[10px] leading-tight text-slate-300">
+            <div>
+              <strong className="text-emerald-400">📱 iPhone:</strong> Tap <span className="text-amber-300 font-semibold">Share ➔ "Add to Home Screen"</span> in Safari, then open the app and allow notifications for live meet alerts!
+            </div>
+            <div>
+              <strong className="text-emerald-400">🤖 Android:</strong> Tap <span className="text-amber-300 font-semibold">"Install App"</span> or allow notification prompt in Chrome for instant updates.
+            </div>
+          </div>
+        </div>
+
         {/* Security & PWA Badges */}
-        <div className="pt-2 border-t border-slate-800 text-center text-[11px] text-slate-400 flex items-center justify-center gap-4">
+        <div className="pt-1 border-t border-slate-800 text-center text-[11px] text-slate-400 flex items-center justify-center gap-4">
           <span className="flex items-center gap-1 text-emerald-400 font-medium">
             <CheckCircle2 className="w-3 h-3 text-amber-400" /> iPhone &amp; Android PWA
           </span>
           <span className="text-slate-500">•</span>
-          <span className="text-slate-400">Offline Ready</span>
+          <span className="text-slate-400">Offline &amp; Push Ready</span>
         </div>
 
       </div>

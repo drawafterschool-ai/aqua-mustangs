@@ -5,7 +5,8 @@ import {
   Crown, 
   ChevronDown, 
   Sparkles,
-  Download
+  Download,
+  Bell
 } from 'lucide-react';
 import { type User } from '../../types';
 
@@ -13,9 +14,15 @@ import { AquaMustangsLogo } from '../common/AquaMustangsLogo';
 
 interface AppHeaderProps {
   onOpenPwaGuide?: () => void;
+  onOpenNotifications?: () => void;
+  unreadNotifCount?: number;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenPwaGuide }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ 
+  onOpenPwaGuide, 
+  onOpenNotifications,
+  unreadNotifCount = 0 
+}) => {
   const { currentUser, users, loginUser, isAdmin } = useApp();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
@@ -63,6 +70,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenPwaGuide }) => {
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           
+          {/* Notification Bell Button */}
+          {onOpenNotifications && (
+            <button
+              onClick={onOpenNotifications}
+              title="Team Notifications & Alerts"
+              aria-label="Notifications"
+              className="relative p-2 rounded-xl bg-emerald-900/60 hover:bg-emerald-800 text-amber-300 border border-emerald-700/60 transition shadow-sm"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-slate-950 text-[9px] font-black rounded-full flex items-center justify-center animate-bounce shadow-md">
+                  {unreadNotifCount}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* PWA Guide button */}
           {onOpenPwaGuide && (
             <button

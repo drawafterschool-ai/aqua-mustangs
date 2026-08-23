@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { AppHeader } from './components/layout/AppHeader';
 import { BottomNav, type TabType } from './components/layout/BottomNav';
@@ -16,7 +16,9 @@ import { AthleteDetailModal } from './components/roster/AthleteDetailModal';
 import { EditAthleteModal } from './components/roster/EditAthleteModal';
 import { MemberInviteModal } from './components/roster/MemberInviteModal';
 import { CreateChannelModal } from './components/chat/CreateChannelModal';
-import { type TeamEvent, type User } from './types';
+import { NotificationCenterModal } from './components/notifications/NotificationCenterModal';
+import { INITIAL_NOTIFICATIONS } from './services/notificationService';
+import { type TeamEvent, type User, type AppNotification } from './types';
 
 const MainAppContent: React.FC = () => {
   const { isAuthenticated, events } = useApp();
@@ -35,6 +37,34 @@ const MainAppContent: React.FC = () => {
   // Member invite email modal
   const [inviteModalUser, setInviteModalUser] = useState<User | null>(null);
   const [isNewMemberInvite, setIsNewMemberInvite] = useState(true);
+
+  // Notifications State
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem('mv_swim_notifications_v1');
+    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mv_swim_notifications_v1', JSON.stringify(notifications));
+  }, [notifications]);
+
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleSelectNotification = (notif: AppNotification) => {
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    if (notif.type === 'meet' || notif.type === 'practice' || notif.type === 'social') {
+      setActiveTab('schedule');
+      setShowNotificationModal(false);
+    } else if (notif.type === 'chat') {
+      setActiveTab('chat');
+      setShowNotificationModal(false);
+    }
+  };
 
   // If not authenticated, show the team passcode gate
   if (!isAuthenticated) {
@@ -68,6 +98,8 @@ const MainAppContent: React.FC = () => {
       {/* Top Header */}
       <AppHeader 
         onOpenPwaGuide={() => setShowPwaModal(true)} 
+        onOpenNotifications={() => setShowNotificationModal(true)}
+        unreadNotifCount={unreadNotifCount}
       />
 
       {/* Main Content Area */}
@@ -76,6 +108,8 @@ const MainAppContent: React.FC = () => {
           <HomeView 
             onNavigateTab={setActiveTab}
             onOpenAttendance={(eventId) => setAttendanceEventId(eventId)}
+            onOpenNotifications={() => setShowNotificationModal(true)}
+            unreadNotifCount={unreadNotifCount}
           />
         )}
 
@@ -114,6 +148,14 @@ const MainAppContent: React.FC = () => {
       />
 
       {/* Modals & Dialogs */}
+      <NotificationCenterModal 
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        notifications={notifications}
+        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+        onSelectNotification={handleSelectNotification}
+      />
+
       <PwaModal 
         isOpen={showPwaModal} 
         onClose={() => setShowPwaModal(false)} 

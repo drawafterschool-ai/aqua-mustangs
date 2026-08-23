@@ -120,6 +120,16 @@ export interface TeamAnnouncement {
   pinned: boolean;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: string;
+  type: 'meet' | 'practice' | 'social' | 'chat' | 'announcement';
+  read: boolean;
+  actionUrl?: string;
+}
+
 export interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
