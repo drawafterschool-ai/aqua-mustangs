@@ -55,7 +55,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenPwaGuide }) => {
             </div>
             <p className="text-[10px] text-emerald-300/80 font-medium tracking-wide flex items-center gap-1 m-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              2026 Season • Suburban East Conf.
+              2026 to 2027 Season
             </p>
           </div>
         </div>

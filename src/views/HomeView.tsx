@@ -105,7 +105,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigateTab, onOpenAttenda
             </div>
 
             <div className="text-[11px] text-slate-300 font-mono">
-              SEC Conference
+              2026 to 2027 Season
             </div>
           </div>
 

@@ -47,7 +47,7 @@ export const TeamPasscodeGate: React.FC = () => {
             Aqua Mustangs
           </h1>
           <p className="text-sm font-bold text-amber-400 uppercase tracking-widest">
-            Mounds View Girls Swim &amp; Dive 2026
+            Mounds View Girls Swim &amp; Dive 2026 to 2027
           </p>
           <p className="text-xs text-emerald-300/90 max-w-xs mx-auto">
             Official Progressive Web App for Athletes, Coaches &amp; Parents

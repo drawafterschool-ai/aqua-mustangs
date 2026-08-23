@@ -102,7 +102,7 @@ export const RosterView: React.FC<RosterViewProps> = ({ onSelectAthlete, onOpenA
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Aqua_Mustangs_Roster_2026.csv`);
+    link.setAttribute('download', `Aqua_Mustangs_Roster_2026_2027.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
