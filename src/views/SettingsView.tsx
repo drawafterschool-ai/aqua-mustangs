@@ -11,7 +11,10 @@ import {
   Lock,
   Database,
   Sparkles,
-  Camera
+  Camera,
+  KeyRound,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { AvatarPickerModal } from '../components/common/AvatarPickerModal';
 
@@ -29,13 +32,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
     resetAllDataToDefaults,
     isCloudConnected,
     seedCloudFirestore,
-    updateUser
+    eraseAllSampleData,
+    updateUser,
+    teamPasscode,
+    adminPin,
+    updateTeamPasscode,
+    updateAdminSecurityPin
   } = useApp();
 
   const [pinInput, setPinInput] = useState('');
   const [pinMessage, setPinMessage] = useState<string | null>(null);
   const [resetConfirmed, setResetConfirmed] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+
+  // Credentials Edit State
+  const [showChangeCreds, setShowChangeCreds] = useState(false);
+  const [newTeamPasscode, setNewTeamPasscode] = useState(teamPasscode);
+  const [newAdminPin, setNewAdminPin] = useState(adminPin);
+  const [credsSuccessMsg, setCredsSuccessMsg] = useState<string | null>(null);
+
+  // Erase Sample Data State
+  const [showEraseConfirm, setShowEraseConfirm] = useState(false);
+  const [eraseInput, setEraseInput] = useState('');
+  const [isErasing, setIsErasing] = useState(false);
+  const [eraseStatusMsg, setEraseStatusMsg] = useState<string | null>(null);
 
   const handleVerifyPin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,10 +68,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
     }
   };
 
+  const handleSaveCredentials = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTeamPasscode.trim()) {
+      updateTeamPasscode(newTeamPasscode.trim());
+    }
+    if (newAdminPin.trim()) {
+      updateAdminSecurityPin(newAdminPin.trim());
+    }
+    setCredsSuccessMsg('Security PIN & Team Passcode updated successfully!');
+    setTimeout(() => setCredsSuccessMsg(null), 4000);
+  };
+
   const handleResetData = () => {
     resetAllDataToDefaults();
     setResetConfirmed(true);
     setTimeout(() => setResetConfirmed(false), 3000);
+  };
+
+  const handleEraseSampleData = async () => {
+    if (eraseInput.trim().toUpperCase() !== 'ERASE') {
+      alert('Please type ERASE to confirm wiping all sample data.');
+      return;
+    }
+    setIsErasing(true);
+    const result = await eraseAllSampleData();
+    setIsErasing(false);
+    setShowEraseConfirm(false);
+    setEraseInput('');
+    setEraseStatusMsg(result.message);
+    setTimeout(() => setEraseStatusMsg(null), 5000);
   };
 
   const handleSaveAvatar = (newAvatar: string) => {
@@ -69,7 +115,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
           {isAdmin ? 'Admin Hub & Settings' : 'My Athlete Profile & Settings'}
         </h2>
         <p className="text-xs text-emerald-300">
-          Profile details, parent contacts, security and PWA install
+          Profile details, parent contacts, security PIN, and database management
         </p>
       </div>
 
@@ -137,39 +183,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
               <span className="text-xs font-bold text-amber-400 flex items-center gap-1">
                 <Heart className="w-3.5 h-3.5 text-rose-400" /> My Parents &amp; Guardians
               </span>
-              <button
-                onClick={() => onEditProfile(currentUser)}
-                className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
-              >
-                Edit Info
-              </button>
+              <span className="text-[10px] text-slate-400">
+                {currentUser.parents?.length || 0} Registered
+              </span>
             </div>
 
-            {currentUser.parents.length === 0 ? (
-              <p className="text-xs text-slate-500">No parent details registered.</p>
+            {(!currentUser.parents || currentUser.parents.length === 0) ? (
+              <p className="text-xs text-slate-400 italic">No parent info added yet.</p>
             ) : (
               <div className="space-y-1.5">
                 {currentUser.parents.map((p: ParentInfo) => (
-                  <div key={p.id} className="p-2 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                  <div key={p.id} className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                     <div>
                       <span className="font-bold text-white">{p.name}</span>
-                      <span className="text-[10px] text-slate-400 ml-1">({p.relationship})</span>
-                      <div className="text-[11px] text-slate-400 font-mono">{p.phone}</div>
+                      <span className="text-[10px] text-emerald-300 ml-1.5">({p.relationship})</span>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">{p.phone}</div>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
-                      Registered
-                    </span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
+          {/* Edit Profile Button */}
           <button
             onClick={() => onEditProfile(currentUser)}
-            className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-xl transition border border-slate-700"
+            className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 rounded-xl border border-slate-700 transition"
           >
-            Edit My Profile &amp; Parent Details
+            Edit Profile Details &amp; Parents
           </button>
         </div>
       )}
@@ -195,16 +236,89 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
         </button>
       </div>
 
-      {/* COACH ADMIN PIN SECURITY */}
+      {/* CHANGE SECURITY PIN & PASSCODE FOR ALL USERS */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-emerald-700/60 shadow-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-amber-400" />
+            <h4 className="text-xs sm:text-sm font-extrabold text-white">Security PIN &amp; Passcode</h4>
+          </div>
+          <button
+            onClick={() => setShowChangeCreds(!showChangeCreds)}
+            className="text-[11px] font-bold text-amber-300 hover:underline px-2 py-0.5 rounded-lg bg-slate-800 border border-slate-700"
+          >
+            {showChangeCreds ? 'Hide Editor' : 'Change PIN / Passcode'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 block">Current Team Code</span>
+            <span className="font-mono font-black text-amber-400 text-sm mt-0.5 block">{teamPasscode}</span>
+          </div>
+          <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span className="text-[10px] text-slate-400 block">Coach Admin PIN</span>
+            <span className="font-mono font-black text-white text-sm mt-0.5 block">{adminPin}</span>
+          </div>
+        </div>
+
+        {showChangeCreds && (
+          <form onSubmit={handleSaveCredentials} className="p-3 bg-slate-950/90 rounded-2xl border border-slate-800 space-y-3 animate-in fade-in">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                New Team Passcode (For Athlete &amp; Parent Entry)
+              </label>
+              <input
+                type="text"
+                value={newTeamPasscode}
+                onChange={e => setNewTeamPasscode(e.target.value.toUpperCase())}
+                placeholder="e.g. MUSTANGS2026"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                New Coach / Admin Security PIN (4-6 digits)
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                value={newAdminPin}
+                onChange={e => setNewAdminPin(e.target.value)}
+                placeholder="e.g. 2026"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 text-white text-xs font-bold rounded-xl shadow-md border border-amber-400/40 transition flex items-center justify-center gap-1.5"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Save &amp; Update Credentials</span>
+            </button>
+          </form>
+        )}
+
+        {credsSuccessMsg && (
+          <p className="text-xs font-bold text-emerald-400 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-600/40 flex items-center gap-1.5 animate-in fade-in">
+            <Check className="w-3.5 h-3.5 text-amber-400" />
+            <span>{credsSuccessMsg}</span>
+          </p>
+        )}
+      </div>
+
+      {/* COACH ADMIN PIN VERIFICATION */}
       <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-400" />
-            <h4 className="text-xs sm:text-sm font-extrabold text-white">Coach Security PIN</h4>
+            <h4 className="text-xs sm:text-sm font-extrabold text-white">Unlock Admin PIN on this Device</h4>
           </div>
           {isAdminPinVerified ? (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">
-              PIN Active (2026)
+              PIN Verified ({adminPin})
             </span>
           ) : (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
@@ -214,7 +328,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
         </div>
 
         <p className="text-xs text-slate-400">
-          Protects admin operations and private lineup communications on shared devices.
+          Unlocks admin operations on shared devices.
         </p>
 
         <form onSubmit={handleVerifyPin} className="flex gap-2">
@@ -223,7 +337,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
             maxLength={6}
             value={pinInput}
             onChange={e => setPinInput(e.target.value)}
-            placeholder="Enter Coach PIN (2026)"
+            placeholder={`Enter PIN (${adminPin})`}
             className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono"
           />
           <button
@@ -260,7 +374,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
 
         <p className="text-xs text-slate-400 leading-relaxed">
           {isCloudConnected 
-            ? 'Connected to Google Cloud Firestore. All RSVPs, roster changes, events, and group chats sync instantly across all athletes & parents in real-time.' 
+            ? 'Connected to Google Cloud Firestore (aqua-mustangs). All RSVPs, roster changes, events, and chats sync in real-time.' 
             : 'Fill in your Firebase project keys in the .env file to enable real-time Cloud Firestore sync across multiple devices.'}
         </p>
 
@@ -274,27 +388,98 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
               className="px-3.5 py-2 bg-emerald-800/80 hover:bg-emerald-700 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Seed Roster &amp; Events to Firestore</span>
+              <span>Seed Sample Roster &amp; Events to Firestore</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* SYSTEM & DATA MANAGEMENT */}
+      {/* ADMIN DATA MANAGEMENT: ERASE SAMPLE DATA (CLEAN SLATE) */}
+      {isAdmin && (
+        <div className="p-4 rounded-3xl bg-rose-950/40 border border-rose-800/60 shadow-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <h4 className="text-xs sm:text-sm font-extrabold text-white">Erase All Sample Data</h4>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-900 text-rose-200 border border-rose-700">
+              Admin Action
+            </span>
+          </div>
+
+          <p className="text-xs text-rose-200/90 leading-relaxed">
+            Wipe all demo athletes, sample meets, practices, and test messages so your coaches can start with a <strong>100% clean team roster</strong>.
+          </p>
+
+          {!showEraseConfirm ? (
+            <button
+              onClick={() => setShowEraseConfirm(true)}
+              className="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Start Clean Slate (Erase Sample Data)</span>
+            </button>
+          ) : (
+            <div className="p-3.5 bg-slate-950 rounded-2xl border border-rose-600/60 space-y-3 animate-in fade-in">
+              <div className="flex items-center gap-2 text-xs font-bold text-rose-400">
+                <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                <span>Type <strong>ERASE</strong> below to confirm wiping all sample data:</span>
+              </div>
+
+              <input
+                type="text"
+                value={eraseInput}
+                onChange={e => setEraseInput(e.target.value)}
+                placeholder="Type ERASE"
+                className="w-full bg-slate-900 border border-rose-700 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-rose-400"
+              />
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEraseSampleData}
+                  disabled={isErasing || eraseInput.trim().toUpperCase() !== 'ERASE'}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-lg transition"
+                >
+                  {isErasing ? 'Wiping Database...' : 'Confirm & Wipe Sample Data'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowEraseConfirm(false);
+                    setEraseInput('');
+                  }}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {eraseStatusMsg && (
+            <p className="text-xs font-bold text-emerald-400 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-600/40 flex items-center gap-1.5 animate-in fade-in">
+              <Check className="w-3.5 h-3.5 text-amber-400" />
+              <span>{eraseStatusMsg}</span>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* RESET TO DEMO DATA (RECOVERY) */}
       <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
         <h4 className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
-          <RotateCcw className="w-4 h-4 text-emerald-400" /> Reset &amp; Demo Data
+          <RotateCcw className="w-4 h-4 text-emerald-400" /> Restore Sample Demo Data
         </h4>
         <p className="text-xs text-slate-400">
-          Reset roster, calendar events, and team chats back to the default Mounds View Mustangs seed dataset.
+          Restore the default Mounds View Mustangs sample roster and calendar events for testing.
         </p>
 
         <button
           onClick={handleResetData}
-          className="px-4 py-2 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
         >
           {resetConfirmed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <RotateCcw className="w-3.5 h-3.5" />}
-          {resetConfirmed ? 'Reset to Default Season Data!' : 'Reset All App Data'}
+          {resetConfirmed ? 'Restored Demo Data!' : 'Restore Demo Data'}
         </button>
       </div>
 
@@ -302,7 +487,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
       <div className="text-center pt-3 text-slate-500 text-xs space-y-1">
         <p className="font-bold text-slate-400">Aqua Mustangs • Mounds View High School Girls Swim &amp; Dive</p>
         <p className="text-[11px]">Section 4AA • Minnesota MSHSL • 2026-2027 Season</p>
-        <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: MUSTANGS2026 • Admin PIN: 2026</p>
+        <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: {teamPasscode} • Admin PIN: {adminPin}</p>
       </div>
 
       {currentUser && (

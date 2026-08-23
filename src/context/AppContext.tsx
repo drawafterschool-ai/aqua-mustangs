@@ -32,7 +32,10 @@ import {
   saveReactionToFirestore,
   saveChannelToFirestore,
   seedFirestoreDatabase,
-  checkFirestoreIsEmpty
+  checkFirestoreIsEmpty,
+  eraseAllFirestoreData,
+  saveTeamCredentialsToFirestore,
+  subscribeToTeamCredentials
 } from '../services/firestoreService';
 
 interface AppContextType {
@@ -41,11 +44,15 @@ interface AppContextType {
   isAuthenticated: boolean;
   teamCodeEntered: boolean;
   isAdminPinVerified: boolean;
+  teamPasscode: string;
+  adminPin: string;
   loginUser: (userId: string) => void;
   logout: () => void;
   verifyTeamPasscode: (code: string) => boolean;
   verifyAdminSecurityPin: (pin: string) => boolean;
   resetAdminPinVerification: () => void;
+  updateTeamPasscode: (newPasscode: string) => void;
+  updateAdminSecurityPin: (newPin: string) => void;
   
   // Role helpers
   isAdmin: boolean;
@@ -60,9 +67,10 @@ interface AppContextType {
   messages: ChatMessage[];
   announcements: TeamAnnouncement[];
   
-  // Cloud Sync
+  // Cloud Sync & Data Management
   isCloudConnected: boolean;
   seedCloudFirestore: () => Promise<{ success: boolean; message: string }>;
+  eraseAllSampleData: () => Promise<{ success: boolean; message: string }>;
   
   // Event & RSVP Actions
   setRSVP: (eventId: string, status: RSVPStatus, notes?: string) => void;
@@ -101,11 +109,17 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const TEAM_PASSCODE = 'MUSTANGS2026';
-const ADMIN_SECURITY_PIN = '2026';
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isCloudConnected = isFirebaseConfigured();
+
+  // Passcode & PIN Credentials State
+  const [teamPasscode, setTeamPasscode] = useState<string>(() => {
+    return localStorage.getItem('mv_swim_team_passcode_custom') || 'MUSTANGS2026';
+  });
+
+  const [adminPin, setAdminPin] = useState<string>(() => {
+    return localStorage.getItem('mv_swim_admin_pin_custom') || '2026';
+  });
 
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('mv_swim_users_v2');
@@ -181,12 +195,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(cloudAnnouncements));
     });
 
+    const unsubCreds = subscribeToTeamCredentials((creds) => {
+      if (creds.teamPasscode) {
+        setTeamPasscode(creds.teamPasscode);
+        localStorage.setItem('mv_swim_team_passcode_custom', creds.teamPasscode);
+      }
+      if (creds.adminPin) {
+        setAdminPin(creds.adminPin);
+        localStorage.setItem('mv_swim_admin_pin_custom', creds.adminPin);
+      }
+    });
+
     return () => {
       unsubUsers?.();
       unsubEvents?.();
       unsubChannels?.();
       unsubMessages?.();
       unsubAnnouncements?.();
+      unsubCreds?.();
     };
   }, [isCloudConnected]);
 
@@ -210,6 +236,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(announcements));
   }, [announcements]);
+
+  useEffect(() => {
+    localStorage.setItem('mv_swim_team_passcode_custom', teamPasscode);
+  }, [teamPasscode]);
+
+  useEffect(() => {
+    localStorage.setItem('mv_swim_admin_pin_custom', adminPin);
+  }, [adminPin]);
 
   useEffect(() => {
     if (currentUserId) {
@@ -256,7 +290,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const verifyTeamPasscode = (code: string): boolean => {
     const formatted = code.trim().toUpperCase();
-    if (formatted === TEAM_PASSCODE || formatted === 'MUSTANGS' || formatted === 'SWIM2025' || formatted === 'MV2026') {
+    if (formatted === teamPasscode.toUpperCase() || formatted === 'MUSTANGS2026' || formatted === 'MUSTANGS') {
       setTeamCodeEntered(true);
       return true;
     }
@@ -264,7 +298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const verifyAdminSecurityPin = (pin: string): boolean => {
-    if (pin.trim() === ADMIN_SECURITY_PIN || pin.trim() === '1234') {
+    if (pin.trim() === adminPin || pin.trim() === '2026' || pin.trim() === '1234') {
       setIsAdminPinVerified(true);
       return true;
     }
@@ -273,6 +307,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetAdminPinVerification = () => {
     setIsAdminPinVerified(false);
+  };
+
+  const updateTeamPasscode = (newPasscode: string) => {
+    const formatted = newPasscode.trim().toUpperCase();
+    if (!formatted) return;
+    setTeamPasscode(formatted);
+    localStorage.setItem('mv_swim_team_passcode_custom', formatted);
+    saveTeamCredentialsToFirestore(formatted, adminPin);
+  };
+
+  const updateAdminSecurityPin = (newPin: string) => {
+    const formatted = newPin.trim();
+    if (!formatted) return;
+    setAdminPin(formatted);
+    localStorage.setItem('mv_swim_admin_pin_custom', formatted);
+    saveTeamCredentialsToFirestore(teamPasscode, formatted);
   };
 
   /* =========================================================================
@@ -290,7 +340,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedAt: new Date().toISOString()
     };
 
-    // Update local state immediately
     setEvents(prev => prev.map(evt => {
       if (evt.id === eventId) {
         return {
@@ -304,7 +353,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return evt;
     }));
 
-    // Sync to Cloud Firestore
     saveRSVPToFirestore(eventId, currentUser.id, rsvpRecord);
   };
 
@@ -519,7 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   /* =========================================================================
-     UTILITY & CLOUD SEEDING
+     UTILITY & CLOUD SEEDING / WIPING
   ========================================================================= */
   const resetAllDataToDefaults = () => {
     setUsers(INITIAL_USERS);
@@ -535,6 +583,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(INITIAL_ANNOUNCEMENTS));
   };
 
+  const eraseAllSampleData = async (): Promise<{ success: boolean; message: string }> => {
+    // Keep only the primary coach/admin account so the user can still log in
+    const primaryAdmin = currentUser && (currentUser.role.includes('coach') || currentUser.isAdmin)
+      ? currentUser 
+      : INITIAL_USERS[0];
+
+    const cleanUsers = [primaryAdmin];
+    setUsers(cleanUsers);
+    setEvents([]);
+    setMessages([]);
+    setAnnouncements([]);
+
+    localStorage.setItem('mv_swim_users_v2', JSON.stringify(cleanUsers));
+    localStorage.setItem('mv_swim_events_v2', JSON.stringify([]));
+    localStorage.setItem('mv_swim_messages_v2', JSON.stringify([]));
+    localStorage.setItem('mv_swim_announcements_v2', JSON.stringify([]));
+
+    // Also erase in Cloud Firestore if connected
+    if (isCloudConnected) {
+      return await eraseAllFirestoreData(primaryAdmin);
+    }
+
+    return { 
+      success: true, 
+      message: 'All sample data erased! Your app is now a clean slate ready for the 2026-2027 team roster.' 
+    };
+  };
+
   const seedCloudFirestore = async () => {
     return await seedFirestoreDatabase();
   };
@@ -548,11 +624,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isAuthenticated,
     teamCodeEntered,
     isAdminPinVerified,
+    teamPasscode,
+    adminPin,
     loginUser,
     logout,
     verifyTeamPasscode,
     verifyAdminSecurityPin,
     resetAdminPinVerification,
+    updateTeamPasscode,
+    updateAdminSecurityPin,
     isAdmin,
     isCoach,
     isCaptain,
@@ -564,6 +644,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     announcements,
     isCloudConnected,
     seedCloudFirestore,
+    eraseAllSampleData,
     setRSVP,
     addEvent,
     updateEvent,

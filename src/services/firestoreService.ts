@@ -251,3 +251,70 @@ export const checkFirestoreIsEmpty = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export const eraseAllFirestoreData = async (keepUser?: User): Promise<{ success: boolean; message: string }> => {
+  if (!db || !isFirebaseConfigured()) {
+    return { success: true, message: 'Local storage data cleared.' };
+  }
+
+  try {
+    const batch = writeBatch(db);
+
+    // Fetch and delete all users except current admin
+    const userDocs = await getDocs(collection(db, COLLECTIONS.USERS));
+    userDocs.forEach((d) => {
+      if (!keepUser || d.id !== keepUser.id) {
+        batch.delete(d.ref);
+      }
+    });
+
+    // Delete all events
+    const eventDocs = await getDocs(collection(db, COLLECTIONS.EVENTS));
+    eventDocs.forEach((d) => batch.delete(d.ref));
+
+    // Delete all messages
+    const msgDocs = await getDocs(collection(db, COLLECTIONS.MESSAGES));
+    msgDocs.forEach((d) => batch.delete(d.ref));
+
+    // Delete all announcements
+    const annDocs = await getDocs(collection(db, COLLECTIONS.ANNOUNCEMENTS));
+    annDocs.forEach((d) => batch.delete(d.ref));
+
+    // If keepUser specified, ensure they exist
+    if (keepUser) {
+      batch.set(doc(db, COLLECTIONS.USERS, keepUser.id), keepUser);
+    }
+
+    await batch.commit();
+
+    return { 
+      success: true, 
+      message: 'All sample data erased from Cloud Firestore. Your database is now a clean slate!' 
+    };
+  } catch (err: any) {
+    console.error('Failed to erase Firestore data:', err);
+    return {
+      success: false,
+      message: `Failed to erase Firestore: ${err?.message || err}`
+    };
+  }
+};
+
+export const saveTeamCredentialsToFirestore = async (teamPasscode: string, adminPin: string): Promise<void> => {
+  if (!db || !isFirebaseConfigured()) return;
+  const settingsRef = doc(db, 'settings', 'auth');
+  await setDoc(settingsRef, { teamPasscode, adminPin, updatedAt: new Date().toISOString() }, { merge: true });
+};
+
+export const subscribeToTeamCredentials = (
+  onUpdate: (data: { teamPasscode?: string; adminPin?: string }) => void
+): Unsubscribe | null => {
+  if (!db || !isFirebaseConfigured()) return null;
+  const settingsRef = doc(db, 'settings', 'auth');
+  return onSnapshot(settingsRef, (snap) => {
+    if (snap.exists()) {
+      onUpdate(snap.data() as { teamPasscode?: string; adminPin?: string });
+    }
+  });
+};
+
