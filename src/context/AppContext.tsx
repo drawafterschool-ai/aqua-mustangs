@@ -79,7 +79,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const TEAM_PASSCODE = 'MUSTANGS2025';
+const TEAM_PASSCODE = 'MUSTANGS2026';
 const ADMIN_SECURITY_PIN = '2026';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

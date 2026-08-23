@@ -200,7 +200,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenPwaGuide }) => {
                   </div>
 
                   <div className="pt-2 mt-2 border-t border-slate-800 text-center">
-                    <span className="text-[10px] text-slate-400">Team Code: <code className="text-amber-400 font-mono">MUSTANGS2025</code> • Admin PIN: <code className="text-amber-400 font-mono">2026</code></span>
+                    <span className="text-[10px] text-slate-400">Team Code: <code className="text-amber-400 font-mono">MUSTANGS2026</code> • Admin PIN: <code className="text-amber-400 font-mono">2026</code></span>
                   </div>
                 </div>
               </>

@@ -19,7 +19,7 @@ export const TeamPasscodeGate: React.FC = () => {
       setError(null);
       setStep('profile');
     } else {
-      setError('Invalid team passcode. Tip: Use MUSTANGS2025');
+      setError('Invalid team passcode. Tip: Use MUSTANGS2026');
     }
   };
 
@@ -62,7 +62,7 @@ export const TeamPasscodeGate: React.FC = () => {
                 <span className="flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-amber-400" /> Enter Team Passcode
                 </span>
-                <span className="text-[10px] text-amber-400 font-mono">MUSTANGS2025</span>
+                <span className="text-[10px] text-amber-400 font-mono">MUSTANGS2026</span>
               </label>
 
               <input
@@ -70,7 +70,7 @@ export const TeamPasscodeGate: React.FC = () => {
                 autoFocus
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
-                placeholder="Enter MUSTANGS2025"
+                placeholder="Enter MUSTANGS2026"
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono uppercase tracking-wider"
               />
             </div>
@@ -93,8 +93,8 @@ export const TeamPasscodeGate: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setPasscode('MUSTANGS2025');
-                  verifyTeamPasscode('MUSTANGS2025');
+                  setPasscode('MUSTANGS2026');
+                  verifyTeamPasscode('MUSTANGS2026');
                   setStep('profile');
                 }}
                 className="text-xs text-amber-300 hover:underline font-semibold"

@@ -238,7 +238,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
       <div className="text-center pt-3 text-slate-500 text-xs space-y-1">
         <p className="font-bold text-slate-400">Aqua Mustangs • Mounds View High School Girls Swim &amp; Dive</p>
         <p className="text-[11px]">Suburban East Conference • Section 4AA • Minnesota MSHSL</p>
-        <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: MUSTANGS2025 • Admin PIN: 2026</p>
+        <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: MUSTANGS2026 • Admin PIN: 2026</p>
       </div>
 
     </div>
