@@ -10,6 +10,8 @@ import {
   Sparkles
 } from 'lucide-react';
 
+import { useApp } from '../../context/AppContext';
+
 interface MemberInviteModalProps {
   user: User;
   isOpen: boolean;
@@ -23,39 +25,65 @@ export const MemberInviteModal: React.FC<MemberInviteModalProps> = ({
   onClose, 
   isNewMember = true 
 }) => {
+  const { teamPasscode, adminPin } = useApp();
   const [copied, setCopied] = useState(false);
   const [emailDispatched, setEmailDispatched] = useState(false);
 
   if (!isOpen) return null;
 
-  const appUrl = window.location.origin;
+  const appUrl = 'https://aqua-mustangs.web.app';
   const isCoachOrCaptain = user.role.includes('coach') || user.role === 'captain';
   const roleName = user.role.replace('_', ' ').toUpperCase();
 
-  const emailSubject = `Welcome to Aqua Mustangs (2026-2027 Season) - Team App & Login Credentials`;
+  const emailSubject = `🐴 Welcome to Aqua Mustangs (2026-2027) - App Link & Login Credentials`;
 
   const emailBody = `Hi ${user.name},
 
-Welcome to the Aqua Mustangs (Mounds View Girls Swim & Dive) for the 2026-2027 Season!
+Welcome to the Aqua Mustangs (Mounds View High School Girls Swim & Dive) for the 2026-2027 Season! 🐴🏊‍♀️
 
-Here are your team app access details:
-------------------------------------------
-App Link: ${appUrl}
-Team Role: ${roleName} ${user.grade ? `(Grade ${user.grade})` : ''}
-Team Passcode: MUSTANGS2026
-${isCoachOrCaptain ? `Admin Security PIN: 2026\n` : ''}
-How to Install the App:
-1. Open ${appUrl} in Safari (iPhone) or Chrome (Android).
-2. Tap Share -> "Add to Home Screen" to install it as an app.
-3. Enter team passcode MUSTANGS2026 and select your profile (${user.name}).
+We’re excited to launch our official team Progressive Web App (PWA) for all athletes, coaches, and parents.
 
-Once logged in, you can confirm meet attendance (RSVP), view the team calendar, check the roster & parent directory, and join group chats.
+----------------------------------------------------
+📲 YOUR APP LOGIN CREDENTIALS
+----------------------------------------------------
+• App Website: ${appUrl}
+• Team Passcode: ${teamPasscode}
+• Your Profile: ${user.name} (${roleName})
+${isCoachOrCaptain ? `• Coach / Admin Security PIN: ${adminPin}\n` : ''}
+----------------------------------------------------
+📱 STEP-BY-STEP SETUP INSTRUCTIONS
+----------------------------------------------------
 
-Go Aqua Mustangs! 🐴🏊‍♀️`;
+📱 FOR IPHONE (iOS):
+1. Open Safari on your iPhone and go to: ${appUrl}
+2. Tap the Share icon (the square with the arrow pointing up at the bottom).
+3. Scroll down and tap "Add to Home Screen", then tap "Add".
+4. Open the "Aqua Mustangs" app icon from your Home Screen.
+5. Enter the Team Passcode (${teamPasscode}), select your name (${user.name}), and tap "Allow" for notifications when prompted so you receive live meet alerts!
+
+🤖 FOR ANDROID:
+1. Open Google Chrome and go to: ${appUrl}
+2. Tap the "Install App" banner at the bottom (or tap the 3 dots menu in the top right and select "Install App").
+3. Open the app from your Home Screen.
+4. Enter the Team Passcode (${teamPasscode}), select your name (${user.name}), and enable notifications.
+
+----------------------------------------------------
+🌟 WHAT YOU CAN DO IN THE APP:
+----------------------------------------------------
+✅ Meet & Practice RSVPs: Confirm your attendance with 1 tap so coaches can plan event heats & relays.
+✅ Team Calendar: View Swimmers Meets, Divers Meets, Practices, and Pasta Parties.
+✅ Parent & Athlete Directory: Quick 1-tap call, text, or email for all teammates and parents.
+✅ Team Chat: Join channels for Announcements, Girls Squad, Diving Crew, and Socials.
+✅ Profile Customization: Tap Settings to update your profile photo and parent info.
+
+If you have any questions or need help logging in, feel free to reach out to the coaches or team captains!
+
+Go Aqua Mustangs! 🐴💚💛
+Mounds View High School Girls Swim & Dive`;
 
   const mailtoUrl = `mailto:${user.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
   
-  const smsBody = `Hi ${user.name}! Welcome to Aqua Mustangs 2026-2027. Open ${appUrl} and use team passcode MUSTANGS2026 to access our team app!`;
+  const smsBody = `Hi ${user.name}! Welcome to Aqua Mustangs 2026-2027. Open ${appUrl} and use team passcode ${teamPasscode} to access our team app!`;
   const smsUrl = `sms:${user.phone}?body=${encodeURIComponent(smsBody)}`;
 
   const handleCopy = () => {
