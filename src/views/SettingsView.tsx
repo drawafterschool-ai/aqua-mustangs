@@ -8,7 +8,9 @@ import {
   Heart, 
   Smartphone, 
   Check, 
-  Lock
+  Lock,
+  Database,
+  Sparkles
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -22,7 +24,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
     isAdmin, 
     verifyAdminSecurityPin, 
     isAdminPinVerified, 
-    resetAllDataToDefaults 
+    resetAllDataToDefaults,
+    isCloudConnected,
+    seedCloudFirestore
   } = useApp();
 
   const [pinInput, setPinInput] = useState('');
@@ -213,6 +217,47 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
 
         {pinMessage && (
           <p className="text-xs font-semibold text-amber-300">{pinMessage}</p>
+        )}
+      </div>
+
+      {/* CLOUD FIRESTORE SYNC & STATUS */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-emerald-700/60 shadow-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-amber-400" />
+            <h4 className="text-xs sm:text-sm font-extrabold text-white">Cloud Firestore Database</h4>
+          </div>
+          {isCloudConnected ? (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Sync Active
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-700/60">
+              Local Storage Mode
+            </span>
+          )}
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed">
+          {isCloudConnected 
+            ? 'Connected to Google Cloud Firestore. All RSVPs, roster changes, events, and group chats sync instantly across all athletes & parents in real-time.' 
+            : 'Fill in your Firebase project keys in the .env file to enable real-time Cloud Firestore sync across multiple devices.'}
+        </p>
+
+        {isCloudConnected && (
+          <div className="pt-1">
+            <button
+              onClick={async () => {
+                const res = await seedCloudFirestore();
+                alert(res.message);
+              }}
+              className="px-3.5 py-2 bg-emerald-800/80 hover:bg-emerald-700 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Seed Roster &amp; Events to Firestore</span>
+            </button>
+          </div>
         )}
       </div>
 

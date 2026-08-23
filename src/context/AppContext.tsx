@@ -16,6 +16,24 @@ import {
   INITIAL_MESSAGES, 
   INITIAL_ANNOUNCEMENTS 
 } from '../data/seedData';
+import { isFirebaseConfigured } from '../config/firebase';
+import { 
+  subscribeToUsers, 
+  subscribeToEvents, 
+  subscribeToChannels, 
+  subscribeToMessages, 
+  subscribeToAnnouncements,
+  saveUserToFirestore,
+  deleteUserFromFirestore,
+  saveEventToFirestore,
+  deleteEventFromFirestore,
+  saveRSVPToFirestore,
+  saveMessageToFirestore,
+  saveReactionToFirestore,
+  saveChannelToFirestore,
+  seedFirestoreDatabase,
+  checkFirestoreIsEmpty
+} from '../services/firestoreService';
 
 interface AppContextType {
   // Auth & Active User
@@ -41,6 +59,10 @@ interface AppContextType {
   channels: ChatChannel[];
   messages: ChatMessage[];
   announcements: TeamAnnouncement[];
+  
+  // Cloud Sync
+  isCloudConnected: boolean;
+  seedCloudFirestore: () => Promise<{ success: boolean; message: string }>;
   
   // Event & RSVP Actions
   setRSVP: (eventId: string, status: RSVPStatus, notes?: string) => void;
@@ -83,6 +105,8 @@ const TEAM_PASSCODE = 'MUSTANGS2026';
 const ADMIN_SECURITY_PIN = '2026';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isCloudConnected = isFirebaseConfigured();
+
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('mv_swim_users_v2');
     return saved ? JSON.parse(saved) : INITIAL_USERS;
@@ -108,16 +132,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
   });
 
-  const [teamCodeEntered, setTeamCodeEntered] = useState<boolean>(() => {
-    return localStorage.getItem('mv_swim_team_code_verified') === 'true';
+  // Auth State
+  const [currentUserId, setCurrentUserId] = useState<string | null>(() => {
+    return localStorage.getItem('mv_swim_active_user_id') || 'u-capt-1';
   });
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(() => {
-    return localStorage.getItem('mv_swim_current_user_id') || 'u-capt-1';
+  const [teamCodeEntered, setTeamCodeEntered] = useState<boolean>(() => {
+    return localStorage.getItem('mv_swim_team_passcode_verified') === 'true';
   });
 
   const [isAdminPinVerified, setIsAdminPinVerified] = useState<boolean>(false);
 
+  /* =========================================================================
+     FIRESTORE REAL-TIME SUBSCRIPTIONS
+  ========================================================================= */
+  useEffect(() => {
+    if (!isCloudConnected) return;
+
+    // Check if database is empty on first boot and auto-seed initial data
+    checkFirestoreIsEmpty().then((isEmpty) => {
+      if (isEmpty) {
+        seedFirestoreDatabase();
+      }
+    });
+
+    const unsubUsers = subscribeToUsers((cloudUsers) => {
+      setUsers(cloudUsers);
+      localStorage.setItem('mv_swim_users_v2', JSON.stringify(cloudUsers));
+    });
+
+    const unsubEvents = subscribeToEvents((cloudEvents) => {
+      setEvents(cloudEvents);
+      localStorage.setItem('mv_swim_events_v2', JSON.stringify(cloudEvents));
+    });
+
+    const unsubChannels = subscribeToChannels((cloudChannels) => {
+      setChannels(cloudChannels);
+      localStorage.setItem('mv_swim_channels_v2', JSON.stringify(cloudChannels));
+    });
+
+    const unsubMessages = subscribeToMessages((cloudMessages) => {
+      setMessages(cloudMessages);
+      localStorage.setItem('mv_swim_messages_v2', JSON.stringify(cloudMessages));
+    });
+
+    const unsubAnnouncements = subscribeToAnnouncements((cloudAnnouncements) => {
+      setAnnouncements(cloudAnnouncements);
+      localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(cloudAnnouncements));
+    });
+
+    return () => {
+      unsubUsers?.();
+      unsubEvents?.();
+      unsubChannels?.();
+      unsubMessages?.();
+      unsubAnnouncements?.();
+    };
+  }, [isCloudConnected]);
+
+  // Persist local storage fallbacks
   useEffect(() => {
     localStorage.setItem('mv_swim_users_v2', JSON.stringify(users));
   }, [users]);
@@ -140,59 +213,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (currentUserId) {
-      localStorage.setItem('mv_swim_current_user_id', currentUserId);
-    } else {
-      localStorage.removeItem('mv_swim_current_user_id');
+      localStorage.setItem('mv_swim_active_user_id', currentUserId);
     }
   }, [currentUserId]);
 
+  useEffect(() => {
+    localStorage.setItem('mv_swim_team_passcode_verified', String(teamCodeEntered));
+  }, [teamCodeEntered]);
+
+  // Current User Object
   const currentUser = useMemo(() => {
-    return users.find((u: User) => u.id === currentUserId) || null;
+    return users.find(u => u.id === currentUserId) || users[0] || null;
   }, [users, currentUserId]);
 
-  const isAdmin = useMemo(() => {
-    if (!currentUser) return false;
-    return (
-      currentUser.isAdmin || 
-      currentUser.role === 'head_coach' || 
-      currentUser.role === 'assistant_coach' || 
-      currentUser.role === 'diving_coach' || 
-      currentUser.role === 'captain'
-    );
-  }, [currentUser]);
-
+  // Role Checks
   const isCoach = useMemo(() => {
     if (!currentUser) return false;
     return ['head_coach', 'assistant_coach', 'diving_coach'].includes(currentUser.role);
   }, [currentUser]);
 
-  const isCaptain = useMemo(() => {
-    return currentUser?.role === 'captain';
-  }, [currentUser]);
+  const isCaptain = useMemo(() => currentUser?.role === 'captain', [currentUser]);
+  const isAdmin = useMemo(() => isCoach || isCaptain || Boolean(currentUser?.isAdmin), [isCoach, isCaptain, currentUser]);
+  const isStudent = useMemo(() => !isCoach, [isCoach]);
 
-  const isStudent = useMemo(() => {
-    if (!currentUser) return false;
-    return ['captain', 'swimmer', 'diver', 'manager'].includes(currentUser.role);
-  }, [currentUser]);
+  const isAuthenticated = teamCodeEntered && Boolean(currentUser);
 
-  const isAuthenticated = Boolean(currentUser && teamCodeEntered);
-
+  // Auth Operations
   const loginUser = (userId: string) => {
-    setCurrentUserId(userId);
-    setTeamCodeEntered(true);
-    localStorage.setItem('mv_swim_team_code_verified', 'true');
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setCurrentUserId(userId);
+      setTeamCodeEntered(true);
+      setIsAdminPinVerified(false);
+    }
   };
 
   const logout = () => {
-    setCurrentUserId(null);
+    setTeamCodeEntered(false);
     setIsAdminPinVerified(false);
+    localStorage.removeItem('mv_swim_team_passcode_verified');
   };
 
   const verifyTeamPasscode = (code: string): boolean => {
     const formatted = code.trim().toUpperCase();
     if (formatted === TEAM_PASSCODE || formatted === 'MUSTANGS' || formatted === 'SWIM2025' || formatted === 'MV2026') {
       setTeamCodeEntered(true);
-      localStorage.setItem('mv_swim_team_code_verified', 'true');
       return true;
     }
     return false;
@@ -210,21 +275,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAdminPinVerified(false);
   };
 
+  /* =========================================================================
+     RSVP & EVENT ACTIONS
+  ========================================================================= */
   const setRSVP = (eventId: string, status: RSVPStatus, notes?: string) => {
     if (!currentUser) return;
-    setEvents((prev: TeamEvent[]) => prev.map((evt: TeamEvent) => {
-      if (evt.id !== eventId) return evt;
-      const updatedRsvps = { ...evt.rsvps };
-      updatedRsvps[currentUser.id] = {
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userRole: currentUser.role,
-        status,
-        notes: notes || updatedRsvps[currentUser.id]?.notes || '',
-        updatedAt: new Date().toISOString()
-      };
-      return { ...evt, rsvps: updatedRsvps };
+
+    const rsvpRecord = {
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+      status,
+      notes,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Update local state immediately
+    setEvents(prev => prev.map(evt => {
+      if (evt.id === eventId) {
+        return {
+          ...evt,
+          rsvps: {
+            ...evt.rsvps,
+            [currentUser.id]: rsvpRecord
+          }
+        };
+      }
+      return evt;
     }));
+
+    // Sync to Cloud Firestore
+    saveRSVPToFirestore(eventId, currentUser.id, rsvpRecord);
   };
 
   const addEvent = (eventData: Omit<TeamEvent, 'id' | 'rsvps' | 'createdBy' | 'createdByName'>): TeamEvent => {
@@ -240,37 +321,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: new Date().toISOString()
         }
       } : {},
-      createdBy: currentUser?.id || 'u-coach-1',
-      createdByName: currentUser ? `${currentUser.name} (${currentUser.role.replace('_', ' ')})` : 'Coach'
+      createdBy: currentUser?.id || 'admin',
+      createdByName: currentUser?.name || 'Head Coach'
     };
 
-    setEvents((prev: TeamEvent[]) => [newEvent, ...prev]);
+    setEvents(prev => [...prev, newEvent]);
+    saveEventToFirestore(newEvent);
     return newEvent;
   };
 
   const updateEvent = (eventId: string, eventData: Partial<TeamEvent>) => {
-    setEvents((prev: TeamEvent[]) => prev.map((evt: TeamEvent) => evt.id === eventId ? { ...evt, ...eventData } : evt));
+    setEvents(prev => prev.map(evt => {
+      if (evt.id === eventId) {
+        const updated = { ...evt, ...eventData };
+        saveEventToFirestore(updated);
+        return updated;
+      }
+      return evt;
+    }));
   };
 
   const deleteEvent = (eventId: string) => {
-    setEvents((prev: TeamEvent[]) => prev.filter((evt: TeamEvent) => evt.id !== eventId));
+    setEvents(prev => prev.filter(evt => evt.id !== eventId));
+    deleteEventFromFirestore(eventId);
   };
 
+  /* =========================================================================
+     ROSTER & USER ACTIONS
+  ========================================================================= */
   const addUser = (userData: Omit<User, 'id'>): User => {
     const newUser: User = {
       ...userData,
       id: `u-${Date.now()}`
     };
-    setUsers((prev: User[]) => [...prev, newUser]);
+
+    setUsers(prev => [...prev, newUser]);
+    saveUserToFirestore(newUser);
     return newUser;
   };
 
   const updateUser = (userId: string, userData: Partial<User>) => {
-    setUsers((prev: User[]) => prev.map((u: User) => u.id === userId ? { ...u, ...userData } : u));
+    setUsers(prev => prev.map(user => {
+      if (user.id === userId) {
+        const updated = { ...user, ...userData };
+        saveUserToFirestore(updated);
+        return updated;
+      }
+      return user;
+    }));
   };
 
   const deleteUser = (userId: string) => {
-    setUsers((prev: User[]) => prev.filter((u: User) => u.id !== userId));
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    deleteUserFromFirestore(userId);
   };
 
   const addParentToUser = (userId: string, parentData: Omit<ParentInfo, 'id'>) => {
@@ -278,169 +381,210 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...parentData,
       id: `p-${Date.now()}`
     };
-    setUsers((prev: User[]) => prev.map((u: User) => {
-      if (u.id !== userId) return u;
-      return {
-        ...u,
-        parents: [...u.parents, newParent]
-      };
+
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const updated = {
+          ...u,
+          parents: [...u.parents, newParent]
+        };
+        saveUserToFirestore(updated);
+        return updated;
+      }
+      return u;
     }));
   };
 
   const updateParentInfo = (userId: string, parentId: string, parentData: Partial<ParentInfo>) => {
-    setUsers((prev: User[]) => prev.map((u: User) => {
-      if (u.id !== userId) return u;
-      return {
-        ...u,
-        parents: u.parents.map((p: ParentInfo) => p.id === parentId ? { ...p, ...parentData } : p)
-      };
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const updated = {
+          ...u,
+          parents: u.parents.map(p => p.id === parentId ? { ...p, ...parentData } : p)
+        };
+        saveUserToFirestore(updated);
+        return updated;
+      }
+      return u;
     }));
   };
 
   const removeParentFromUser = (userId: string, parentId: string) => {
-    setUsers((prev: User[]) => prev.map((u: User) => {
-      if (u.id !== userId) return u;
-      return {
-        ...u,
-        parents: u.parents.filter((p: ParentInfo) => p.id !== parentId)
-      };
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const updated = {
+          ...u,
+          parents: u.parents.filter(p => p.id !== parentId)
+        };
+        saveUserToFirestore(updated);
+        return updated;
+      }
+      return u;
     }));
   };
 
+  /* =========================================================================
+     CHAT & MESSAGING ACTIONS
+  ========================================================================= */
   const sendMessage = (channelId: string, content: string): ChatMessage => {
-    if (!currentUser) throw new Error('Must be logged in to send message');
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
+    if (!currentUser) throw new Error('Not logged in');
+
+    const newMessage: ChatMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       channelId,
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderRole: currentUser.role,
       senderAvatar: currentUser.avatar,
       content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      reactions: {}
     };
-    setMessages((prev: ChatMessage[]) => [...prev, newMsg]);
-    return newMsg;
+
+    setMessages(prev => [...prev, newMessage]);
+    saveMessageToFirestore(newMessage);
+    return newMessage;
   };
 
   const toggleReaction = (messageId: string, emoji: string) => {
     if (!currentUser) return;
-    setMessages((prev: ChatMessage[]) => prev.map((msg: ChatMessage) => {
-      if (msg.id !== messageId) return msg;
-      const reactions = { ...(msg.reactions || {}) };
-      const currentUsersForEmoji = reactions[emoji] || [];
-      const hasReacted = currentUsersForEmoji.includes(currentUser.id);
+    const userId = currentUser.id;
 
-      if (hasReacted) {
-        reactions[emoji] = currentUsersForEmoji.filter((id: string) => id !== currentUser.id);
-        if (reactions[emoji].length === 0) {
-          delete reactions[emoji];
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const reactions = { ...(msg.reactions || {}) };
+        const currentList = reactions[emoji] || [];
+
+        if (currentList.includes(userId)) {
+          reactions[emoji] = currentList.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) {
+            delete reactions[emoji];
+          }
+        } else {
+          reactions[emoji] = [...currentList, userId];
         }
-      } else {
-        reactions[emoji] = [...currentUsersForEmoji, currentUser.id];
+
+        const updated = { ...msg, reactions };
+        saveReactionToFirestore(messageId, reactions);
+        return updated;
       }
-      return { ...msg, reactions };
+      return msg;
     }));
   };
 
   const createChannel = (
-    name: string,
-    description: string,
-    icon: string,
+    name: string, 
+    description: string, 
+    icon: string, 
     type: 'public' | 'admins_only' | 'girls_only' | 'custom',
     allowedRoles?: UserRole[],
     allowedUserIds?: string[]
   ): ChatChannel => {
     const newChannel: ChatChannel = {
-      id: `chan-${Date.now()}`,
+      id: `ch-${Date.now()}`,
       name,
       description,
       icon,
       type,
       allowedRoles,
       allowedUserIds,
-      createdBy: currentUser?.id || 'admin'
+      createdBy: currentUser?.id || 'system'
     };
-    setChannels((prev: ChatChannel[]) => [...prev, newChannel]);
+
+    setChannels(prev => [...prev, newChannel]);
+    saveChannelToFirestore(newChannel);
     return newChannel;
   };
 
-  const addAnnouncement = (title: string, content: string, priority: 'normal' | 'high' | 'urgent' = 'normal', pinned: boolean = false) => {
-    const newAnc: TeamAnnouncement = {
-      id: `anc-${Date.now()}`,
+  /* =========================================================================
+     ANNOUNCEMENTS ACTIONS
+  ========================================================================= */
+  const addAnnouncement = (title: string, content: string, priority: 'normal' | 'high' | 'urgent' = 'normal', pinned = false) => {
+    const newAnnouncement: TeamAnnouncement = {
+      id: `ann-${Date.now()}`,
       title,
       content,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString(),
       authorName: currentUser?.name || 'Coach',
       authorRole: currentUser?.role || 'head_coach',
       priority,
       pinned
     };
-    setAnnouncements((prev: TeamAnnouncement[]) => [newAnc, ...prev]);
+
+    setAnnouncements(prev => [newAnnouncement, ...prev]);
   };
 
   const deleteAnnouncement = (id: string) => {
-    setAnnouncements((prev: TeamAnnouncement[]) => prev.filter((a: TeamAnnouncement) => a.id !== id));
+    setAnnouncements(prev => prev.filter(a => a.id !== id));
   };
 
+  /* =========================================================================
+     UTILITY & CLOUD SEEDING
+  ========================================================================= */
   const resetAllDataToDefaults = () => {
-    localStorage.removeItem('mv_swim_users_v2');
-    localStorage.removeItem('mv_swim_events_v2');
-    localStorage.removeItem('mv_swim_channels_v2');
-    localStorage.removeItem('mv_swim_messages_v2');
-    localStorage.removeItem('mv_swim_announcements_v2');
     setUsers(INITIAL_USERS);
     setEvents(INITIAL_EVENTS);
     setChannels(INITIAL_CHANNELS);
     setMessages(INITIAL_MESSAGES);
     setAnnouncements(INITIAL_ANNOUNCEMENTS);
-    setCurrentUserId('u-capt-1');
+
+    localStorage.setItem('mv_swim_users_v2', JSON.stringify(INITIAL_USERS));
+    localStorage.setItem('mv_swim_events_v2', JSON.stringify(INITIAL_EVENTS));
+    localStorage.setItem('mv_swim_channels_v2', JSON.stringify(INITIAL_CHANNELS));
+    localStorage.setItem('mv_swim_messages_v2', JSON.stringify(INITIAL_MESSAGES));
+    localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(INITIAL_ANNOUNCEMENTS));
+  };
+
+  const seedCloudFirestore = async () => {
+    return await seedFirestoreDatabase();
   };
 
   const unreadCountTotal = useMemo(() => {
     return 3;
   }, []);
 
+  const value: AppContextType = {
+    currentUser,
+    isAuthenticated,
+    teamCodeEntered,
+    isAdminPinVerified,
+    loginUser,
+    logout,
+    verifyTeamPasscode,
+    verifyAdminSecurityPin,
+    resetAdminPinVerification,
+    isAdmin,
+    isCoach,
+    isCaptain,
+    isStudent,
+    users,
+    events,
+    channels,
+    messages,
+    announcements,
+    isCloudConnected,
+    seedCloudFirestore,
+    setRSVP,
+    addEvent,
+    updateEvent,
+    deleteEvent,
+    addUser,
+    updateUser,
+    deleteUser,
+    addParentToUser,
+    updateParentInfo,
+    removeParentFromUser,
+    sendMessage,
+    toggleReaction,
+    createChannel,
+    addAnnouncement,
+    deleteAnnouncement,
+    resetAllDataToDefaults,
+    unreadCountTotal
+  };
+
   return (
-    <AppContext.Provider
-      value={{
-        currentUser,
-        isAuthenticated,
-        teamCodeEntered,
-        isAdminPinVerified,
-        loginUser,
-        logout,
-        verifyTeamPasscode,
-        verifyAdminSecurityPin,
-        resetAdminPinVerification,
-        isAdmin,
-        isCoach,
-        isCaptain,
-        isStudent,
-        users,
-        events,
-        channels,
-        messages,
-        announcements,
-        setRSVP,
-        addEvent,
-        updateEvent,
-        deleteEvent,
-        addUser,
-        updateUser,
-        deleteUser,
-        addParentToUser,
-        updateParentInfo,
-        removeParentFromUser,
-        sendMessage,
-        toggleReaction,
-        createChannel,
-        addAnnouncement,
-        deleteAnnouncement,
-        resetAllDataToDefaults,
-        unreadCountTotal
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

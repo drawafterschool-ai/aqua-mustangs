@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Team Members & Rosters
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    // Meets, Practices, Socials & RSVPs
+    match /events/{eventId} {
+      allow read, write: if true;
+    }
+    
+    // Team Chat Channels
+    match /channels/{channelId} {
+      allow read, write: if true;
+    }
+    
+    // Chat Messages & Reactions
+    match /messages/{messageId} {
+      allow read, write: if true;
+    }
+    
+    // Pinned Team Announcements
+    match /announcements/{announcementId} {
+      allow read, write: if true;
+    }
+  }
+}
