@@ -17,6 +17,7 @@ import {
   type ChatChannel, 
   type ChatMessage, 
   type TeamAnnouncement,
+  type TeamDocument,
   type RSVPRecord 
 } from '../types';
 import { 
@@ -24,7 +25,8 @@ import {
   INITIAL_EVENTS, 
   INITIAL_CHANNELS, 
   INITIAL_MESSAGES, 
-  INITIAL_ANNOUNCEMENTS 
+  INITIAL_ANNOUNCEMENTS,
+  INITIAL_DOCUMENTS 
 } from '../data/seedData';
 
 // Collection Names
@@ -33,7 +35,8 @@ export const COLLECTIONS = {
   EVENTS: 'events',
   CHANNELS: 'channels',
   MESSAGES: 'messages',
-  ANNOUNCEMENTS: 'announcements'
+  ANNOUNCEMENTS: 'announcements',
+  DOCUMENTS: 'documents'
 };
 
 /* =========================================================================
@@ -125,6 +128,23 @@ export const subscribeToAnnouncements = (onUpdate: (announcements: TeamAnnouncem
   });
 };
 
+export const subscribeToDocuments = (onUpdate: (documents: TeamDocument[]) => void): Unsubscribe | null => {
+  if (!db || !isFirebaseConfigured()) return null;
+
+  const q = collection(db, COLLECTIONS.DOCUMENTS);
+  return onSnapshot(q, (snapshot) => {
+    const documents: TeamDocument[] = [];
+    snapshot.forEach((docSnap) => {
+      documents.push(docSnap.data() as TeamDocument);
+    });
+    if (documents.length > 0) {
+      onUpdate(documents);
+    }
+  }, (error) => {
+    console.error('Firestore Documents subscription error:', error);
+  });
+};
+
 /* =========================================================================
    MUTATIONS / WRITES
 ========================================================================= */
@@ -182,6 +202,16 @@ export const saveChannelToFirestore = async (channel: ChatChannel): Promise<void
   await setDoc(doc(db, COLLECTIONS.CHANNELS, channel.id), channel);
 };
 
+export const saveDocumentToFirestore = async (document: TeamDocument): Promise<void> => {
+  if (!db || !isFirebaseConfigured()) return;
+  await setDoc(doc(db, COLLECTIONS.DOCUMENTS, document.id), document, { merge: true });
+};
+
+export const deleteDocumentFromFirestore = async (documentId: string): Promise<void> => {
+  if (!db || !isFirebaseConfigured()) return;
+  await deleteDoc(doc(db, COLLECTIONS.DOCUMENTS, documentId));
+};
+
 /* =========================================================================
    SEEDING & INITIALIZATION
 ========================================================================= */
@@ -227,11 +257,17 @@ export const seedFirestoreDatabase = async (): Promise<{ success: boolean; messa
       batch.set(ref, a);
     });
 
+    // Seed Documents & Policies
+    INITIAL_DOCUMENTS.forEach((docItem) => {
+      const ref = doc(db!, COLLECTIONS.DOCUMENTS, docItem.id);
+      batch.set(ref, docItem);
+    });
+
     await batch.commit();
 
     return { 
       success: true, 
-      message: 'Successfully seeded Cloud Firestore with Aqua Mustangs 2026-2027 roster, events & chats!' 
+      message: 'Successfully seeded Cloud Firestore with Aqua Mustangs roster, events, chats & Knowledge Hub policies!' 
     };
   } catch (err: any) {
     console.error('Failed to seed Firestore:', err);
@@ -279,6 +315,10 @@ export const eraseAllFirestoreData = async (keepUser?: User): Promise<{ success:
     // Delete all announcements
     const annDocs = await getDocs(collection(db, COLLECTIONS.ANNOUNCEMENTS));
     annDocs.forEach((d) => batch.delete(d.ref));
+
+    // Delete all documents
+    const docDocs = await getDocs(collection(db, COLLECTIONS.DOCUMENTS));
+    docDocs.forEach((d) => batch.delete(d.ref));
 
     // If keepUser specified, ensure they exist
     if (keepUser) {

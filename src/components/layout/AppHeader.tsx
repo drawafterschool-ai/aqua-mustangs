@@ -6,7 +6,8 @@ import {
   ChevronDown, 
   Sparkles,
   Download,
-  Bell
+  Bell,
+  BookOpen
 } from 'lucide-react';
 import { type User } from '../../types';
 
@@ -15,12 +16,14 @@ import { AquaMustangsLogo } from '../common/AquaMustangsLogo';
 interface AppHeaderProps {
   onOpenPwaGuide?: () => void;
   onOpenNotifications?: () => void;
+  onOpenKnowledgeHub?: () => void;
   unreadNotifCount?: number;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({ 
   onOpenPwaGuide, 
   onOpenNotifications,
+  onOpenKnowledgeHub,
   unreadNotifCount = 0 
 }) => {
   const { currentUser, users, loginUser, isAdmin } = useApp();
@@ -70,6 +73,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         {/* Right side controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           
+          {/* Knowledge Hub Policies Button */}
+          {onOpenKnowledgeHub && (
+            <button
+              onClick={onOpenKnowledgeHub}
+              title="Knowledge Hub & Team Policies"
+              aria-label="Knowledge Hub"
+              className="p-2 rounded-xl bg-emerald-900/60 hover:bg-emerald-800 text-amber-300 border border-emerald-700/60 transition shadow-sm flex items-center gap-1 text-xs font-semibold"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden md:inline text-[11px]">Hub</span>
+            </button>
+          )}
+
           {/* Notification Bell Button */}
           {onOpenNotifications && (
             <button

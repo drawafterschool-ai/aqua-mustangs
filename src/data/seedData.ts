@@ -1,4 +1,11 @@
-import { type User, type TeamEvent, type ChatChannel, type ChatMessage, type TeamAnnouncement } from '../types';
+import { 
+  type User, 
+  type TeamEvent, 
+  type ChatChannel, 
+  type ChatMessage, 
+  type TeamAnnouncement,
+  type TeamDocument 
+} from '../types';
 
 export const INITIAL_USERS: User[] = [
   {
@@ -727,3 +734,186 @@ export const INITIAL_ANNOUNCEMENTS: TeamAnnouncement[] = [
     pinned: false
   }
 ];
+
+export const INITIAL_DOCUMENTS: TeamDocument[] = [
+  {
+    id: 'doc-1',
+    title: '2026-2027 Aqua Mustangs Team Handbook & Code of Conduct',
+    category: 'handbook_policies',
+    description: 'Official team rules, practice attendance standards, meet etiquette, and athletic expectations.',
+    content: `### Mounds View High School Girls Swim & Dive
+#### 2026-2027 Team Handbook & Standards
+
+---
+
+### 1. Philosophy & Team Culture
+The Aqua Mustangs program is committed to athletic excellence, sportsmanship, and mutual encouragement. Every swimmer and diver—from freshman novice to varsity captain—contributes to our team spirit and culture.
+
+### 2. Attendance & Practice Expectations
+- **Punctuality**: Swimmers and divers must be on deck 10 minutes prior to scheduled practice start times with caps, goggles, chamois, and gear ready.
+- **Excused Absences**: Illness, mandatory academic tests, or family emergencies must be reported to Coach Steve or Coach Sarah **at least 2 hours before practice** via the Aqua Mustangs App RSVP.
+- **Unexcused Absences**: Two unexcused absences will result in suspension from the next varsity meet.
+
+### 3. Dual Meet & Invitational Conduct
+- **Team Area**: Athletes must remain in the team area throughout the entire meet. No wandering or leaving early.
+- **Cheering**: Everyone cheers for teammates until the final swimmer in the last heat of the 400 Free Relay touches the wall!
+- **Uniform**: Official team suits and Mounds View green silicone caps are mandatory during all scoring heats.
+
+### 4. Academic & Chemical Health Bylaws
+- All athletes must maintain a minimum 2.0 GPA with zero failing grades per MSHSL eligibility standards.
+- Zero tolerance policy for chemical health violations as enforced by District 621 and MSHSL regulations.`,
+    fileType: 'policy',
+    updatedAt: '2026-08-20',
+    isPinned: true,
+    author: 'Coach Steve Anderson',
+    tags: ['Handbook', 'Attendance', 'Rules', 'MSHSL']
+  },
+  {
+    id: 'doc-2',
+    title: 'Varsity Lettering Criteria & Standards (2026-2027)',
+    category: 'lettering_standards',
+    description: 'Point minimums, Section 4AA qualifications, and attendance requirements to earn a Varsity Letter.',
+    content: `### 🏅 Aqua Mustangs Varsity Lettering Policy
+#### 2026-2027 Season Guidelines
+
+To earn a Varsity Athletic Letter in Girls Swim & Dive at Mounds View High School, an athlete must fulfill **at least ONE of the following primary criteria** while maintaining 90%+ season attendance and exemplary sportsmanship:
+
+---
+
+### 1. Primary Lettering Criteria (Fulfill 1 or more):
+1. **Section 4AA Roster**: Selected for and compete at the Section 4AA Championship Meet (Swimmer or Diver).
+2. **Dual Meet Point Minimum**: Score an aggregate total of **18 or more individual varsity points** across regular season dual meets and invitationals.
+3. **Automatic Varsity Letter Times**: Achieve the official Mounds View Letter Cut Time in any recognized individual event.
+4. **Diving Benchmarks**: Score **175.00+ points** in a 6-dive dual meet or **300.00+ points** in an 11-dive championship format.
+5. **4-Year Senior Award**: Any 4-year participant in good standing who completes their senior season.
+
+---
+
+### 2. Additional Mandatory Requirements:
+- Finish the season in good academic standing (no MSHSL academic probations).
+- Attend the end-of-season Team Awards Banquet.
+- Return all school-issued equipment (parkas, team warmups) in clean condition.`,
+    fileType: 'policy',
+    updatedAt: '2026-08-18',
+    isPinned: true,
+    author: 'Coaching Staff',
+    tags: ['Lettering', 'Varsity', 'Points', 'Criteria']
+  },
+  {
+    id: 'doc-3',
+    title: 'Section 4AA & Minnesota State Meet Qualifying Standards',
+    category: 'lettering_standards',
+    description: 'Official 2026-2027 State Meet cut times and Section 4AA entry benchmark times.',
+    content: `### ⏱️ MSHSL Girls Swim & Dive Qualifying Standards
+#### Class AA Time Standards (Short Course Yards)
+
+| Event | Section 4AA Entry Cut | Class AA State Auto Cut |
+| :--- | :--- | :--- |
+| **200 Medley Relay** | 2:02.50 | 1:49.80 |
+| **200 Freestyle** | 2:06.00 | 1:55.20 |
+| **200 Individual Medley** | 2:24.00 | 2:10.10 |
+| **50 Freestyle** | 26.20 | 24.10 |
+| **1-Meter Diving (6 Dives)** | 160.00 pts | 215.00 pts |
+| **1-Meter Diving (11 Dives)**| 275.00 pts | 365.00 pts |
+| **100 Butterfly** | 1:04.50 | 58.20 |
+| **100 Freestyle** | 57.50 | 52.80 |
+| **500 Freestyle** | 5:42.00 | 5:11.50 |
+| **200 Freestyle Relay** | 1:48.50 | 1:39.40 |
+| **100 Backstroke** | 1:05.50 | 58.90 |
+| **100 Breaststroke** | 1:14.20 | 1:07.10 |
+| **400 Freestyle Relay** | 3:56.00 | 3:37.20 |
+
+*Note: Achieving an Auto Cut at Section 4AA automatically qualifies the athlete or relay team for the Minnesota State Tournament at the University of Minnesota Jean K. Freeman Aquatic Center.*`,
+    fileType: 'sheet',
+    updatedAt: '2026-08-15',
+    isPinned: false,
+    author: 'Coach Steve Anderson',
+    tags: ['State Cuts', 'Section 4AA', 'Time Standards', 'Diving']
+  },
+  {
+    id: 'doc-4',
+    title: 'Emergency Action Plan (EAP) & Concussion Protocol',
+    category: 'medical_safety',
+    description: 'Pool evacuation, AED location, injury response, and certified athletic trainer return-to-play steps.',
+    content: `### 🩺 Emergency Action Plan (EAP)
+#### Mounds View High School Natatorium & Pool Deck
+
+---
+
+### 1. Emergency Equipment Locations:
+- **Automated External Defibrillator (AED)**: Located immediately outside the natatorium entrance doors in the main athletic hallway (Wall Mounted, Alarm Activated).
+- **First Aid Kit & Backboard**: Mounted on the west wall behind the 1-meter diving boards.
+- **Emergency Phone**: Red landline phone located in the Lifeguard / Coaches Office (Speed dial 9-911).
+
+### 2. Severe Weather & Lightning Protocol:
+- If thunder is heard or lightning is detected within a 10-mile radius, the pool deck and water must be evacuated immediately.
+- The 30-minute rule will be strictly enforced: The pool remains closed for a full 30 minutes following the last sound of thunder.
+
+### 3. Concussion Management (MSHSL Protocol):
+- Any athlete displaying signs of a head injury or concussion will be removed from competition/practice immediately.
+- Must receive written clearance from an authorized medical physician and complete the 5-step return-to-play progression with the MVHS Athletic Trainer before re-entering competition.`,
+    fileType: 'pdf',
+    updatedAt: '2026-08-10',
+    isPinned: false,
+    author: 'MVHS Athletic Department',
+    tags: ['Safety', 'Medical', 'AED', 'EAP', 'Concussion']
+  },
+  {
+    id: 'doc-5',
+    title: 'Parent Booster Club & Volunteer Timer Guide',
+    category: 'parent_booster',
+    description: 'How to volunteer for home dual meets, electronic timing, concessions, and hosting pasta parties.',
+    content: `### 🤝 Aqua Mustangs Parent Booster Club
+#### Volunteer Roles & Guidelines for Home Meets
+
+Welcome Mustang Parents! Our girls rely on parent volunteer support to make our home meets and team spirit events run smoothly.
+
+---
+
+### 1. Lane Timer Guidelines:
+- **Arrival Time**: Please report to the head referee on pool deck 30 minutes before meet start time (approx. 4:30 PM for a 5:00 PM meet).
+- **Responsibilities**:
+  - Each lane has 2 parent timers.
+  - Operate the primary electronic touch button and backup stopwatch.
+  - Record the backup time on the lane clipboard after every heat.
+  - Watch for clean touches on relay exchanges.
+
+### 2. Pasta Party Hosting Guide:
+- Pasta parties are held on Wednesday evenings before major Thursday dual meets.
+- Recommended menu: 2-3 types of pasta (marinara, alfredo, gluten-free option), meatballs/chicken, green salad, garlic bread, fruit, and light dessert.
+- Arrive at host home around 5:45 PM (immediately following after-school drylands/practice).
+
+### 3. Snack Bar & Concessions:
+- Help sell drinks, snacks, and spirit wear in the pool mezzanine during invitationals. All proceeds directly fund team suits, travel buses, and end-of-year banquet gifts.`,
+    fileType: 'doc',
+    updatedAt: '2026-08-12',
+    isPinned: false,
+    author: 'Aqua Mustangs Booster Board',
+    tags: ['Parents', 'Booster', 'Volunteers', 'Pasta Party', 'Timing']
+  },
+  {
+    id: 'doc-6',
+    title: 'Away Meet Travel & Parent Transportation Waiver',
+    category: 'handbook_policies',
+    description: 'Team bus guidelines, departure schedules, and parent sign-out forms for away meets.',
+    content: `### 🚌 Away Meet Transportation & Waiver Policy
+#### District 621 Student Athletic Travel
+
+---
+
+### 1. Team Bus Policy:
+- All swimmers, divers, and student managers are required to travel to away competitions on the official school district bus.
+- Bus departs from the MVHS Athletic Entrance (Door 14). Athletes should arrive at least 15 minutes prior to scheduled departure.
+
+### 2. Post-Meet Parent Sign-Out:
+- If a parent/guardian wishes to drive their student-athlete home directly from an away meet rather than having them ride the bus back:
+  1. The parent must physically sign the Coach's Travel Log sheet on deck after the meet concludes.
+  2. Students are only permitted to leave with their own parent/legal guardian unless a written pre-authorization note has been submitted to the Athletic Office 24 hours in advance.`,
+    fileType: 'policy',
+    updatedAt: '2026-08-14',
+    isPinned: false,
+    author: 'Athletic Director & Coaches',
+    tags: ['Bus', 'Travel', 'Waiver', 'Transportation']
+  }
+];
+

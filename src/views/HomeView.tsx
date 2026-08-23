@@ -14,7 +14,8 @@ import {
   Bus, 
   ShieldCheck, 
   Bell, 
-  PhoneCall
+  PhoneCall,
+  BookOpen
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { type TeamEvent, type User, type TeamAnnouncement, type RSVPRecord } from '../types';
@@ -24,6 +25,7 @@ interface HomeViewProps {
   onNavigateTab: (tab: TabType) => void;
   onOpenAttendance?: (eventId: string) => void;
   onOpenNotifications?: () => void;
+  onOpenKnowledgeHub?: () => void;
   unreadNotifCount?: number;
 }
 
@@ -31,6 +33,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onNavigateTab, 
   onOpenAttendance,
   onOpenNotifications,
+  onOpenKnowledgeHub,
   unreadNotifCount = 0 
 }) => {
   const { 
@@ -338,6 +341,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* KNOWLEDGE HUB & POLICIES CARD */}
+      <div 
+        onClick={onOpenKnowledgeHub}
+        className="p-4 rounded-3xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-[#06241b] border border-emerald-700/60 shadow-xl cursor-pointer hover:border-amber-400/70 transition group relative overflow-hidden"
+      >
+        <div className="flex items-center justify-between gap-3 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-800 text-amber-300 flex items-center justify-center border border-amber-400/40 shadow-lg group-hover:scale-105 transition">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black text-white group-hover:text-amber-300 transition">
+                  Team Knowledge Hub &amp; Policies
+                </h4>
+                <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase tracking-wider">
+                  Official
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-300/90 mt-0.5">
+                Handbook, Lettering Criteria, State Cuts, Safety EAP &amp; Booster Guides
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow border border-amber-400/40 whitespace-nowrap transition"
+          >
+            Open Hub ➔
+          </button>
+        </div>
       </div>
 
       {/* QUICK SHORTCUTS & TEAM RESOURCES */}

@@ -14,16 +14,18 @@ import {
   Camera,
   KeyRound,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  BookOpen
 } from 'lucide-react';
 import { AvatarPickerModal } from '../components/common/AvatarPickerModal';
 
 interface SettingsViewProps {
   onOpenPwaModal: () => void;
   onEditProfile: (user: User) => void;
+  onOpenKnowledgeHub?: () => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEditProfile }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEditProfile, onOpenKnowledgeHub }) => {
   const { 
     currentUser, 
     isAdmin, 
@@ -235,6 +237,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
           <span>Instructions</span>
         </button>
       </div>
+
+      {/* KNOWLEDGE HUB TILE */}
+      {onOpenKnowledgeHub && (
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-950/80 to-slate-900 border border-emerald-700/60 shadow-xl flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-800 text-amber-300 flex items-center justify-center border border-amber-400/40">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-extrabold text-white">Team Knowledge Hub</h4>
+              <p className="text-[11px] text-emerald-300">Handbook, Lettering, Safety EAP &amp; Booster Guides</p>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenKnowledgeHub}
+            className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md border border-amber-400/40 transition flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Open Hub</span>
+          </button>
+        </div>
+      )}
 
       {/* CHANGE SECURITY PIN & PASSCODE FOR ALL USERS */}
       <div className="p-4 rounded-3xl bg-slate-900 border border-emerald-700/60 shadow-xl space-y-3">

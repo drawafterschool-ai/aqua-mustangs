@@ -17,6 +17,7 @@ import { EditAthleteModal } from './components/roster/EditAthleteModal';
 import { MemberInviteModal } from './components/roster/MemberInviteModal';
 import { CreateChannelModal } from './components/chat/CreateChannelModal';
 import { NotificationCenterModal } from './components/notifications/NotificationCenterModal';
+import { KnowledgeHubModal } from './components/knowledge/KnowledgeHubModal';
 import { INITIAL_NOTIFICATIONS } from './services/notificationService';
 import { type TeamEvent, type User, type AppNotification } from './types';
 
@@ -26,6 +27,7 @@ const MainAppContent: React.FC = () => {
 
   // Modals state
   const [showPwaModal, setShowPwaModal] = useState(false);
+  const [showKnowledgeHubModal, setShowKnowledgeHubModal] = useState(false);
   const [attendanceEventId, setAttendanceEventId] = useState<string | null>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TeamEvent | undefined>(undefined);
@@ -99,6 +101,7 @@ const MainAppContent: React.FC = () => {
       <AppHeader 
         onOpenPwaGuide={() => setShowPwaModal(true)} 
         onOpenNotifications={() => setShowNotificationModal(true)}
+        onOpenKnowledgeHub={() => setShowKnowledgeHubModal(true)}
         unreadNotifCount={unreadNotifCount}
       />
 
@@ -109,6 +112,7 @@ const MainAppContent: React.FC = () => {
             onNavigateTab={setActiveTab}
             onOpenAttendance={(eventId) => setAttendanceEventId(eventId)}
             onOpenNotifications={() => setShowNotificationModal(true)}
+            onOpenKnowledgeHub={() => setShowKnowledgeHubModal(true)}
             unreadNotifCount={unreadNotifCount}
           />
         )}
@@ -137,6 +141,7 @@ const MainAppContent: React.FC = () => {
           <SettingsView 
             onOpenPwaModal={() => setShowPwaModal(true)}
             onEditProfile={handleOpenEditAthlete}
+            onOpenKnowledgeHub={() => setShowKnowledgeHubModal(true)}
           />
         )}
       </main>
@@ -148,6 +153,11 @@ const MainAppContent: React.FC = () => {
       />
 
       {/* Modals & Dialogs */}
+      <KnowledgeHubModal 
+        isOpen={showKnowledgeHubModal}
+        onClose={() => setShowKnowledgeHubModal(false)}
+      />
+
       <NotificationCenterModal 
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}

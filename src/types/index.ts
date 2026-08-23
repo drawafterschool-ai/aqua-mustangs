@@ -130,6 +130,27 @@ export interface AppNotification {
   actionUrl?: string;
 }
 
+export type DocumentCategory = 
+  | 'handbook_policies' 
+  | 'lettering_standards' 
+  | 'medical_safety' 
+  | 'parent_booster' 
+  | 'meet_info';
+
+export interface TeamDocument {
+  id: string;
+  title: string;
+  category: DocumentCategory;
+  description: string;
+  content: string; // rich markdown / detailed policy text
+  externalUrl?: string; // link to PDF or Google Drive
+  fileType: 'policy' | 'pdf' | 'doc' | 'sheet' | 'link';
+  updatedAt: string;
+  isPinned?: boolean;
+  author: string;
+  tags?: string[];
+}
+
 export interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;

@@ -4,7 +4,8 @@ import {
   type TeamEvent, 
   type ChatChannel, 
   type ChatMessage, 
-  type TeamAnnouncement, 
+  type TeamAnnouncement,
+  type TeamDocument, 
   type RSVPStatus, 
   type UserRole,
   type ParentInfo 
@@ -14,7 +15,8 @@ import {
   INITIAL_EVENTS, 
   INITIAL_CHANNELS, 
   INITIAL_MESSAGES, 
-  INITIAL_ANNOUNCEMENTS 
+  INITIAL_ANNOUNCEMENTS,
+  INITIAL_DOCUMENTS 
 } from '../data/seedData';
 import { isFirebaseConfigured } from '../config/firebase';
 import { 
@@ -23,6 +25,7 @@ import {
   subscribeToChannels, 
   subscribeToMessages, 
   subscribeToAnnouncements,
+  subscribeToDocuments,
   saveUserToFirestore,
   deleteUserFromFirestore,
   saveEventToFirestore,
@@ -31,6 +34,8 @@ import {
   saveMessageToFirestore,
   saveReactionToFirestore,
   saveChannelToFirestore,
+  saveDocumentToFirestore,
+  deleteDocumentFromFirestore,
   seedFirestoreDatabase,
   checkFirestoreIsEmpty,
   eraseAllFirestoreData,
@@ -66,6 +71,7 @@ interface AppContextType {
   channels: ChatChannel[];
   messages: ChatMessage[];
   announcements: TeamAnnouncement[];
+  documents: TeamDocument[];
   
   // Cloud Sync & Data Management
   isCloudConnected: boolean;
@@ -102,6 +108,11 @@ interface AppContextType {
   addAnnouncement: (title: string, content: string, priority?: 'normal' | 'high' | 'urgent', pinned?: boolean) => void;
   deleteAnnouncement: (id: string) => void;
   
+  // Knowledge Hub & Documents
+  addDocument: (docData: Omit<TeamDocument, 'id' | 'updatedAt' | 'author'>) => TeamDocument;
+  updateDocument: (docId: string, docData: Partial<TeamDocument>) => void;
+  deleteDocument: (docId: string) => void;
+
   // Utility
   resetAllDataToDefaults: () => void;
   unreadCountTotal: number;
@@ -144,6 +155,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [announcements, setAnnouncements] = useState<TeamAnnouncement[]>(() => {
     const saved = localStorage.getItem('mv_swim_announcements_v2');
     return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
+  });
+
+  const [documents, setDocuments] = useState<TeamDocument[]>(() => {
+    const saved = localStorage.getItem('mv_swim_documents_v2');
+    return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
   });
 
   // Auth State
@@ -195,6 +211,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(cloudAnnouncements));
     });
 
+    const unsubDocuments = subscribeToDocuments((cloudDocs) => {
+      setDocuments(cloudDocs);
+      localStorage.setItem('mv_swim_documents_v2', JSON.stringify(cloudDocs));
+    });
+
     const unsubCreds = subscribeToTeamCredentials((creds) => {
       if (creds.teamPasscode) {
         setTeamPasscode(creds.teamPasscode);
@@ -212,6 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubChannels?.();
       unsubMessages?.();
       unsubAnnouncements?.();
+      unsubDocuments?.();
       unsubCreds?.();
     };
   }, [isCloudConnected]);
@@ -236,6 +258,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(announcements));
   }, [announcements]);
+
+  useEffect(() => {
+    localStorage.setItem('mv_swim_documents_v2', JSON.stringify(documents));
+  }, [documents]);
 
   useEffect(() => {
     localStorage.setItem('mv_swim_team_passcode_custom', teamPasscode);
@@ -567,6 +593,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   /* =========================================================================
+     KNOWLEDGE HUB & DOCUMENTS ACTIONS
+  ========================================================================= */
+  const addDocument = (docData: Omit<TeamDocument, 'id' | 'updatedAt' | 'author'>): TeamDocument => {
+    const newDoc: TeamDocument = {
+      ...docData,
+      id: `doc-${Date.now()}`,
+      updatedAt: new Date().toISOString().split('T')[0],
+      author: currentUser?.name || 'Coaching Staff'
+    };
+
+    setDocuments(prev => [newDoc, ...prev]);
+    saveDocumentToFirestore(newDoc);
+    return newDoc;
+  };
+
+  const updateDocument = (docId: string, docData: Partial<TeamDocument>) => {
+    setDocuments(prev => prev.map(d => {
+      if (d.id === docId) {
+        const updated = { 
+          ...d, 
+          ...docData,
+          updatedAt: new Date().toISOString().split('T')[0]
+        };
+        saveDocumentToFirestore(updated);
+        return updated;
+      }
+      return d;
+    }));
+  };
+
+  const deleteDocument = (docId: string) => {
+    setDocuments(prev => prev.filter(d => d.id !== docId));
+    deleteDocumentFromFirestore(docId);
+  };
+
+  /* =========================================================================
      UTILITY & CLOUD SEEDING / WIPING
   ========================================================================= */
   const resetAllDataToDefaults = () => {
@@ -575,12 +637,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChannels(INITIAL_CHANNELS);
     setMessages(INITIAL_MESSAGES);
     setAnnouncements(INITIAL_ANNOUNCEMENTS);
+    setDocuments(INITIAL_DOCUMENTS);
 
     localStorage.setItem('mv_swim_users_v2', JSON.stringify(INITIAL_USERS));
     localStorage.setItem('mv_swim_events_v2', JSON.stringify(INITIAL_EVENTS));
     localStorage.setItem('mv_swim_channels_v2', JSON.stringify(INITIAL_CHANNELS));
     localStorage.setItem('mv_swim_messages_v2', JSON.stringify(INITIAL_MESSAGES));
     localStorage.setItem('mv_swim_announcements_v2', JSON.stringify(INITIAL_ANNOUNCEMENTS));
+    localStorage.setItem('mv_swim_documents_v2', JSON.stringify(INITIAL_DOCUMENTS));
   };
 
   const eraseAllSampleData = async (): Promise<{ success: boolean; message: string }> => {
@@ -642,6 +706,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     channels,
     messages,
     announcements,
+    documents,
     isCloudConnected,
     seedCloudFirestore,
     eraseAllSampleData,
@@ -660,6 +725,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     createChannel,
     addAnnouncement,
     deleteAnnouncement,
+    addDocument,
+    updateDocument,
+    deleteDocument,
     resetAllDataToDefaults,
     unreadCountTotal
   };
