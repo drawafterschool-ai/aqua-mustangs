@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="mvGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E4D3A" />
+      <stop offset="100%" stop-color="#05281E" />
+    </linearGradient>
+    <linearGradient id="mvGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    <linearGradient id="waterBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <rect width="512" height="512" rx="128" fill="url(#mvGreen)" />
+  <circle cx="256" cy="256" r="236" fill="none" stroke="url(#mvGold)" stroke-width="12" stroke-dasharray="14 10" opacity="0.8" />
+
+  <!-- Swimming / Diving Wave Ribbon -->
+  <path d="M 64 340 Q 160 290 256 340 T 448 340 L 448 420 Q 352 380 256 420 T 64 420 Z" fill="url(#waterBlue)" opacity="0.75" />
+  <path d="M 64 380 Q 160 330 256 380 T 448 380 L 448 450 Q 352 420 256 450 T 64 450 Z" fill="url(#mvGold)" opacity="0.4" />
+
+  <!-- Swimmer Silhouette Motif -->
+  <circle cx="190" cy="180" r="32" fill="#F8FAFC" />
+  <path d="M 175 160 Q 200 148 215 165" stroke="url(#mvGold)" stroke-width="8" fill="none" stroke-linecap="round" />
+  
+  <path d="M 215 195 C 260 200 320 220 370 200 C 385 195 395 208 380 220 C 320 255 240 240 180 225 Z" fill="#F8FAFC" />
+  <path d="M 205 185 Q 270 140 340 160" stroke="#F8FAFC" stroke-width="22" stroke-linecap="round" fill="none" />
+  <path d="M 165 210 Q 120 240 100 280" stroke="url(#mvGold)" stroke-width="20" stroke-linecap="round" fill="none" />
+
+  <!-- Aqua Mustangs Typography -->
+  <text x="256" y="110" font-family="'Outfit', 'Arial Black', sans-serif" font-weight="900" font-size="64" fill="url(#mvGold)" text-anchor="middle" letter-spacing="3">MVHS</text>
+  <text x="256" y="475" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="34" fill="#F8FAFC" text-anchor="middle" letter-spacing="3">AQUA MUSTANGS</text>
+</svg>
