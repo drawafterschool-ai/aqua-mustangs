@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Plus, Trash2, Heart } from 'lucide-react';
+import { X, Plus, Trash2, Heart, Camera } from 'lucide-react';
 import { type User, type UserRole, type ParentInfo, type AthleteType } from '../../types';
+import { AvatarPickerModal } from '../common/AvatarPickerModal';
 
 interface EditAthleteModalProps {
   isOpen: boolean;
@@ -19,7 +20,8 @@ export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onCl
   const [email, setEmail] = useState(initialUser?.email || '');
   const [phone, setPhone] = useState(initialUser?.phone || '');
   const [birthday, setBirthday] = useState(initialUser?.birthday || '2008-01-01');
-  const avatar = initialUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+  const [avatar, setAvatar] = useState(initialUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const bio = initialUser?.bio || '';
   const [eventsStr, setEventsStr] = useState(initialUser?.events ? initialUser.events.join(', ') : '50 Free, 100 Free');
   const [emergencyNotes, setEmergencyNotes] = useState(initialUser?.emergencyNotes || '');
@@ -127,6 +129,30 @@ export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onCl
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           
+          {/* Avatar Photo Selector */}
+          <div className="p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <img 
+                src={avatar} 
+                alt="" 
+                className="w-12 h-12 rounded-2xl object-cover border-2 border-amber-400 shadow-md flex-shrink-0"
+              />
+              <div>
+                <div className="text-xs font-bold text-white">Profile Photo</div>
+                <div className="text-[11px] text-slate-400">Upload custom picture or choose avatar</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAvatarPicker(true)}
+              className="py-1.5 px-3 rounded-xl bg-emerald-900/80 hover:bg-emerald-800 text-amber-300 text-xs font-bold border border-amber-400/40 flex items-center gap-1.5 transition"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Change Photo</span>
+            </button>
+          </div>
+
           {/* Role & Grade */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -326,6 +352,14 @@ export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onCl
           </div>
 
         </form>
+
+        <AvatarPickerModal 
+          isOpen={showAvatarPicker}
+          onClose={() => setShowAvatarPicker(false)}
+          currentAvatar={avatar}
+          userName={name || 'Athlete'}
+          onSaveAvatar={(newUrl) => setAvatar(newUrl)}
+        />
 
       </div>
     </div>

@@ -12,8 +12,10 @@ import {
   Trash2, 
   MessageSquare,
   Trophy,
-  KeyRound
+  KeyRound,
+  Camera
 } from 'lucide-react';
+import { AvatarPickerModal } from '../common/AvatarPickerModal';
 
 interface AthleteDetailModalProps {
   user: User;
@@ -30,8 +32,9 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({
   onEdit,
   onSendInvite 
 }) => {
-  const { isAdmin, deleteUser } = useApp();
+  const { isAdmin, currentUser, deleteUser, updateUser } = useApp();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   if (!isOpen) return null;
 
@@ -73,11 +76,22 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({
           </button>
 
           <div className="flex items-center gap-4">
-            <img 
-              src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'} 
-              alt={user.name} 
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-400 shadow-xl"
-            />
+            <div className="relative group flex-shrink-0">
+              <img 
+                src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'} 
+                alt={user.name} 
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-400 shadow-xl"
+              />
+              {(isAdmin || currentUser?.id === user.id) && (
+                <button
+                  onClick={() => setShowAvatarPicker(true)}
+                  className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full border-2 border-slate-900 shadow-md transition"
+                  title="Change profile photo"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
             <div className="min-w-0 pr-6">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40">
@@ -318,6 +332,16 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({
             Close
           </button>
         </div>
+
+        <AvatarPickerModal 
+          isOpen={showAvatarPicker}
+          onClose={() => setShowAvatarPicker(false)}
+          currentAvatar={user.avatar || ''}
+          userName={user.name}
+          onSaveAvatar={(newUrl) => {
+            updateUser(user.id, { avatar: newUrl });
+          }}
+        />
 
       </div>
     </div>

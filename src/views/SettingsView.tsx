@@ -10,8 +10,10 @@ import {
   Check, 
   Lock,
   Database,
-  Sparkles
+  Sparkles,
+  Camera
 } from 'lucide-react';
+import { AvatarPickerModal } from '../components/common/AvatarPickerModal';
 
 interface SettingsViewProps {
   onOpenPwaModal: () => void;
@@ -26,12 +28,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
     isAdminPinVerified, 
     resetAllDataToDefaults,
     isCloudConnected,
-    seedCloudFirestore
+    seedCloudFirestore,
+    updateUser
   } = useApp();
 
   const [pinInput, setPinInput] = useState('');
   const [pinMessage, setPinMessage] = useState<string | null>(null);
   const [resetConfirmed, setResetConfirmed] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const handleVerifyPin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +52,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
     resetAllDataToDefaults();
     setResetConfirmed(true);
     setTimeout(() => setResetConfirmed(false), 3000);
+  };
+
+  const handleSaveAvatar = (newAvatar: string) => {
+    if (currentUser) {
+      updateUser(currentUser.id, { avatar: newAvatar });
+    }
   };
 
   return (
@@ -67,11 +77,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
       {currentUser && (
         <div className="p-5 rounded-3xl bg-slate-900 border border-emerald-800/40 shadow-xl text-slate-100 space-y-4">
           <div className="flex items-center gap-4">
-            <img 
-              src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'} 
-              alt="" 
-              className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
-            />
+            <div className="relative group">
+              <img 
+                src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'} 
+                alt="" 
+                className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-md"
+              />
+              <button
+                onClick={() => setShowAvatarPicker(true)}
+                className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full border-2 border-slate-900 shadow-md transition"
+                title="Change profile photo"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-extrabold text-white truncate">
@@ -285,6 +304,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
         <p className="text-[11px]">Section 4AA • Minnesota MSHSL • 2026-2027 Season</p>
         <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: MUSTANGS2026 • Admin PIN: 2026</p>
       </div>
+
+      {currentUser && (
+        <AvatarPickerModal 
+          isOpen={showAvatarPicker}
+          onClose={() => setShowAvatarPicker(false)}
+          currentAvatar={currentUser.avatar || ''}
+          userName={currentUser.name}
+          onSaveAvatar={handleSaveAvatar}
+        />
+      )}
 
     </div>
   );
