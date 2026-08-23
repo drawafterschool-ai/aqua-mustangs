@@ -11,7 +11,8 @@ import {
   Edit, 
   Trash2, 
   MessageSquare,
-  Trophy
+  Trophy,
+  KeyRound
 } from 'lucide-react';
 
 interface AthleteDetailModalProps {
@@ -19,9 +20,16 @@ interface AthleteDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit: (user: User) => void;
+  onSendInvite?: (user: User) => void;
 }
 
-export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ user, isOpen, onClose, onEdit }) => {
+export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ 
+  user, 
+  isOpen, 
+  onClose, 
+  onEdit,
+  onSendInvite 
+}) => {
   const { isAdmin, deleteUser } = useApp();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -147,8 +155,10 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ user, is
             )}
 
             <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-              <div className="text-[10px] text-slate-400">Team Status</div>
-              <div className="text-xs font-bold text-emerald-400 mt-0.5">Active Roster</div>
+              <div className="text-[10px] text-slate-400">Team Discipline</div>
+              <div className="text-xs font-bold text-emerald-400 mt-0.5 capitalize">
+                {user.athleteType || (user.role === 'diver' || user.role === 'diving_coach' ? 'Diver' : 'Swimmer')}
+              </div>
             </div>
           </div>
 
@@ -254,14 +264,25 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ user, is
         </div>
 
         {/* Footer Actions */}
-        <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
+        <div className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950 flex flex-wrap items-center justify-between gap-2">
           {isAdmin ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {onSendInvite && (
+                <button
+                  onClick={() => onSendInvite(user)}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md border border-amber-400/30 transition"
+                  title="Send welcome email with team passcode & PIN"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Send Invite &amp; PIN</span>
+                </button>
+              )}
+
               <button
                 onClick={() => onEdit(user)}
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 transition flex items-center gap-1.5 border border-slate-700"
               >
-                <Edit className="w-3.5 h-3.5" /> Edit Profile &amp; Parents
+                <Edit className="w-3.5 h-3.5" /> Edit Profile
               </button>
 
               {confirmDelete ? (
@@ -292,7 +313,7 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ user, is
 
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition"
+            className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition ml-auto"
           >
             Close
           </button>

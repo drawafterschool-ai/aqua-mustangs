@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { type User, type UserRole, type ParentInfo } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { X, Plus, Trash2, Heart } from 'lucide-react';
+import { type User, type UserRole, type ParentInfo, type AthleteType } from '../../types';
 
 interface EditAthleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialUser?: User | null;
+  onSaved?: (user: User, isNew: boolean) => void;
 }
 
-export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onClose, initialUser }) => {
+export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onClose, initialUser, onSaved }) => {
   const { addUser, updateUser } = useApp();
 
   const [name, setName] = useState(initialUser?.name || '');
@@ -68,40 +69,35 @@ export const EditAthleteModal: React.FC<EditAthleteModalProps> = ({ isOpen, onCl
 
     const isAdmin = role.includes('coach') || role === 'captain';
 
-    const athleteType = role === 'diver' || role === 'diving_coach' ? 'diver' : 'swimmer';
+    const athleteType: AthleteType = role === 'diver' || role === 'diving_coach' ? 'diver' : 'swimmer';
+
+    const userData = {
+      name,
+      role,
+      athleteType,
+      grade: role.includes('coach') ? undefined : (grade as 9 | 10 | 11 | 12),
+      email,
+      phone,
+      birthday,
+      avatar,
+      bio,
+      events,
+      emergencyNotes,
+      parents: validParents,
+      isAdmin
+    };
 
     if (initialUser) {
-      updateUser(initialUser.id, {
-        name,
-        role,
-        athleteType,
-        grade: role.includes('coach') ? undefined : (grade as 9 | 10 | 11 | 12),
-        email,
-        phone,
-        birthday,
-        avatar,
-        bio,
-        events,
-        emergencyNotes,
-        parents: validParents,
-        isAdmin
-      });
+      updateUser(initialUser.id, userData);
+      if (onSaved) {
+        onSaved({ ...userData, id: initialUser.id }, false);
+      }
     } else {
-      addUser({
-        name,
-        role,
-        athleteType,
-        grade: role.includes('coach') ? undefined : (grade as 9 | 10 | 11 | 12),
-        email,
-        phone,
-        birthday,
-        avatar,
-        bio,
-        events,
-        emergencyNotes,
-        parents: validParents,
-        isAdmin
-      });
+      const newId = `u-${Date.now()}`;
+      addUser(userData);
+      if (onSaved) {
+        onSaved({ ...userData, id: newId }, true);
+      }
     }
 
     onClose();

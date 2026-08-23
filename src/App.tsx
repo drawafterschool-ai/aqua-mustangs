@@ -14,6 +14,7 @@ import { EventAttendanceModal } from './components/events/EventAttendanceModal';
 import { CreateEventModal } from './components/events/CreateEventModal';
 import { AthleteDetailModal } from './components/roster/AthleteDetailModal';
 import { EditAthleteModal } from './components/roster/EditAthleteModal';
+import { MemberInviteModal } from './components/roster/MemberInviteModal';
 import { CreateChannelModal } from './components/chat/CreateChannelModal';
 import { type TeamEvent, type User } from './types';
 
@@ -30,6 +31,10 @@ const MainAppContent: React.FC = () => {
   const [showEditAthleteModal, setShowEditAthleteModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
+  
+  // Member invite email modal
+  const [inviteModalUser, setInviteModalUser] = useState<User | null>(null);
+  const [isNewMemberInvite, setIsNewMemberInvite] = useState(true);
 
   // If not authenticated, show the team passcode gate
   if (!isAuthenticated) {
@@ -51,6 +56,11 @@ const MainAppContent: React.FC = () => {
   const handleOpenEditAthlete = (user: User) => {
     setEditingUser(user);
     setShowEditAthleteModal(true);
+  };
+
+  const handleSendInvite = (user: User, isNew = false) => {
+    setInviteModalUser(user);
+    setIsNewMemberInvite(isNew);
   };
 
   return (
@@ -137,6 +147,9 @@ const MainAppContent: React.FC = () => {
             setSelectedAthlete(null);
             handleOpenEditAthlete(user);
           }}
+          onSendInvite={(user) => {
+            handleSendInvite(user, false);
+          }}
         />
       )}
 
@@ -148,6 +161,20 @@ const MainAppContent: React.FC = () => {
             setEditingUser(null);
           }}
           initialUser={editingUser}
+          onSaved={(savedUser, isNew) => {
+            if (isNew) {
+              handleSendInvite(savedUser, true);
+            }
+          }}
+        />
+      )}
+
+      {inviteModalUser && (
+        <MemberInviteModal 
+          user={inviteModalUser}
+          isOpen={Boolean(inviteModalUser)}
+          onClose={() => setInviteModalUser(null)}
+          isNewMember={isNewMemberInvite}
         />
       )}
 
@@ -161,10 +188,12 @@ const MainAppContent: React.FC = () => {
   );
 };
 
-export default function App() {
+export function App() {
   return (
     <AppProvider>
       <MainAppContent />
     </AppProvider>
   );
 }
+
+export default App;
