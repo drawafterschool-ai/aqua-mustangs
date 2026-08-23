@@ -87,7 +87,7 @@ export const AthleteDetailModal: React.FC<AthleteDetailModalProps> = ({ user, is
               </h2>
 
               <p className="text-xs text-emerald-300/90 font-medium">
-                Aqua Mustangs • 2026 to 2027 Season
+                Aqua Mustangs • 2026-2027 Season
               </p>
             </div>
           </div>

@@ -609,7 +609,7 @@ export const INITIAL_MESSAGES: ChatMessage[] = [
     senderId: 'u-coach-1',
     senderName: 'Steve Anderson',
     senderRole: 'head_coach',
-    content: 'Welcome to the 2026 to 2027 Aqua Mustangs Season! 🐴 Please make sure all parents and athletes review the meet schedule and confirm RSVP attendance on the app for this Thursday’s Stillwater home opener by Wednesday 8 PM.',
+    content: 'Welcome to the 2026-2027 Aqua Mustangs Season! 🐴 Please make sure all parents and athletes review the meet schedule and confirm RSVP attendance on the app for this Thursday’s Stillwater home opener by Wednesday 8 PM.',
     timestamp: '2026-08-23T08:30:00Z',
     isAnnouncement: true,
     isPinned: true,

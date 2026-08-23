@@ -237,7 +237,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
       {/* TEAM INFO FOOTER */}
       <div className="text-center pt-3 text-slate-500 text-xs space-y-1">
         <p className="font-bold text-slate-400">Aqua Mustangs • Mounds View High School Girls Swim &amp; Dive</p>
-        <p className="text-[11px]">Section 4AA • Minnesota MSHSL • 2026 to 2027 Season</p>
+        <p className="text-[11px]">Section 4AA • Minnesota MSHSL • 2026-2027 Season</p>
         <p className="text-[10px] text-amber-400/80 font-mono">Team Passcode: MUSTANGS2026 • Admin PIN: 2026</p>
       </div>
 
