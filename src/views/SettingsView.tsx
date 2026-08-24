@@ -23,9 +23,15 @@ interface SettingsViewProps {
   onOpenPwaModal: () => void;
   onEditProfile: (user: User) => void;
   onOpenKnowledgeHub?: () => void;
+  onOpenPricingModal?: () => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEditProfile, onOpenKnowledgeHub }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ 
+  onOpenPwaModal, 
+  onEditProfile, 
+  onOpenKnowledgeHub,
+  onOpenPricingModal 
+}) => {
   const { 
     currentUser, 
     isAdmin, 
@@ -257,6 +263,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPwaModal, onEd
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>Open Hub</span>
+          </button>
+        </div>
+      )}
+
+      {/* PRO PLANS & 15-DAY FREE TRIAL TILE */}
+      {onOpenPricingModal && (
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-emerald-950/60 border border-amber-400/50 shadow-xl flex items-center justify-between gap-3 relative overflow-hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center border border-amber-300 shadow-md">
+              <Sparkles className="w-5 h-5 fill-slate-950" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-xs sm:text-sm font-extrabold text-white">Pro Plans &amp; Price Tiers</h4>
+                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase">
+                  15-Day Free Trial
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">Starter, Varsity Pro, and Athletic District subscription options</p>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenPricingModal}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black shadow-md border border-amber-200 transition flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
+            <span>View Tiers</span>
           </button>
         </div>
       )}

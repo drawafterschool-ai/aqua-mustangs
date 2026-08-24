@@ -18,6 +18,7 @@ import { MemberInviteModal } from './components/roster/MemberInviteModal';
 import { CreateChannelModal } from './components/chat/CreateChannelModal';
 import { NotificationCenterModal } from './components/notifications/NotificationCenterModal';
 import { KnowledgeHubModal } from './components/knowledge/KnowledgeHubModal';
+import { PricingTiersModal } from './components/pricing/PricingTiersModal';
 import { INITIAL_NOTIFICATIONS } from './services/notificationService';
 import { type TeamEvent, type User, type AppNotification } from './types';
 
@@ -28,6 +29,7 @@ const MainAppContent: React.FC = () => {
   // Modals state
   const [showPwaModal, setShowPwaModal] = useState(false);
   const [showKnowledgeHubModal, setShowKnowledgeHubModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [attendanceEventId, setAttendanceEventId] = useState<string | null>(null);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TeamEvent | undefined>(undefined);
@@ -142,6 +144,7 @@ const MainAppContent: React.FC = () => {
             onOpenPwaModal={() => setShowPwaModal(true)}
             onEditProfile={handleOpenEditAthlete}
             onOpenKnowledgeHub={() => setShowKnowledgeHubModal(true)}
+            onOpenPricingModal={() => setShowPricingModal(true)}
           />
         )}
       </main>
@@ -153,6 +156,11 @@ const MainAppContent: React.FC = () => {
       />
 
       {/* Modals & Dialogs */}
+      <PricingTiersModal 
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+      />
+
       <KnowledgeHubModal 
         isOpen={showKnowledgeHubModal}
         onClose={() => setShowKnowledgeHubModal(false)}
